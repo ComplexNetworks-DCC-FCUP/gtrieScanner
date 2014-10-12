@@ -1,0 +1,128 @@
+----------------------------------------------------
+      _       _     ___                            
+ __ _| |_ _ _(_)___/ __| __ __ _ _ _  _ _  ___ _ _ 
+/ _` |  _| '_| / -_)__ \/ _/ _` | ' \| ' \/ -_) '_|
+\__, |\__|_| |_\___|___/\__\__,_|_||_|_||_\___|_|  
+|___/                                          
+    
+gtrieScanner: quick discovery of network motifs
+Version: 0.1
+
+Pedro Ribeiro - CRACS & INESC-TEC, DCC/FCUP
+pribeiro@dcc.fc.up.pt
+----------------------------------------------------
+
+This is a software package that uses the g-trie data structure to count occurrences of subgraphs on larger graphs, determining if they are network motifs.
+
+You can find more about it on the following url:
+http://www.dcc.fc.up.pt/gtries/
+
+If you want to learn more about g-tries, please consult the following references:
+
+* Pedro Ribeiro and Fernando Silva. Querying Subgraph Sets with G-Tries. (Best Paper Award) 2nd ACM SIGMOD Workshop on Databases and Social Networks (DBSocial), Scottsdale, USA, pp 25-30, May, 2012.
+
+* Pedro Ribeiro. Efficient and Scalable Algorithms for Network Motifs Discovery. PhD Thesis. Doctoral Programme in Computer Science, Faculty of Science, University of Porto. June, 2011.
+
+* Pedro Ribeiro and Fernando Silva. G-Tries: an efficient data structure for discovering network motifs. ACM 25th Symposium On Applied Computing - Bioinformatics Track, Sierre, Switzerland, pp 1559-1566, March, 2010.
+
+----------------------------------------------------
+License
+
+This software is released under the "Artistic License 2.0". See the file "LICENSE" for more details.
+
+This software uses the nauty program version 2.4 by Brendan McKay (http://cs.anu.edu.au/~bdm/nauty/). Therefore, nauty's license restrictions also apply to the usage of gtrieScanner. Nauty files are included in the "nauty" directory.
+
+----------------------------------------------------
+INSTALL
+
+Just use 'make' (you nedd gcc and make tools instaled).
+[Tested with Ubuntu 11.10 and GCC 4.6.1)
+
+If you have any trouble compiling, please contact the author.
+
+----------------------------------------------------
+VERY SHORT MANUAL
+
+A limitation of this particular release is that you can only search for subgraphs of a specific size, that is, you cannot search for subgraphs of different sizes at the same time (but nothing forbids you to do more than search).
+
+Examples of usage
+
+gtrieScanner -s 3 -m esu -g s420_st.txt
+Compute the frequencies of subgraphs of size 3 in the undirected s420_st.txt network, using ESU algorithm
+
+gtrieScanner -s 4 -m gtrie dir4.gt -g yeastInter_st.txt -d -t html -o yeast.html
+Compute the frequencies of subgraphs of size 4 in directed yeastInter_st.txt network, using the g-trie stored in undir4.gt. Produce an HTML output to yeast.html file.
+
+gtrieScanner -s 5 -m subgraphs undir5.str -g s420_st.txt -r 100 -oc dump.txt
+Compute the motifs of size 5 in undirected s420_st.txt network, using the subgraphs listed in undir5.str and 100 random networks. Dump all occurrences of the subgbaphs in the original network 'dump.txt'.
+
+gtrieScanner -s 5 -c dir5.str -o mygtrie5.gt -d
+Produce the directed g-trie containing the subgraph list of dir5.str and output it to a pre-computed g-trie file 'mygtrie.gt'
+
+Note that in all cases results are first ordered by z-score and then by frequency.
+
+Command Line Syntax
+
+You should call the program like this:
+
+gtrieScanner -s <motif_size> [other_option]
+
+Possible Options
+
+ - [-s <int>] or [--size <int>]
+   Subgraph/motif size to consider (mandatory)
+
+ - [-g <file>] or [--graph <file>]
+   File containing the graph (mandatory except when just creating a g-trie)
+
+ - [-d] or [--directed]
+   Graph is directed (default is undirected)
+
+ - [-u] or [--undirected]
+   Graph is undirected (default is undirected)
+
+ - [-f <format>] of [--format <formatgt;]
+   Format of the graph file. 'format' can be: (simple_weight)
+   . "simple": list of pairs "a b", meaning an edge between a and b
+   . "simple_weight": list of triples "a b c", meaning an edge between a and b with weight c (c is ignored)
+   In all cases node labels are integers starting from 1. See above for example files.
+
+ - [-m <method>] or [--method <method>]
+   Method for searching for motifs. 'method' can be: (mandatory except when just creating a g-trie)
+   . "esu": Use ESU on original graph
+   . "gtrie <file>": use the g-trie of 'file' on original network
+   . "subgraphs <file>": insert the subgraph list (one subgraph per line, as exemplified above) 
+                               on a g-trie and use it on the original network.
+   In any case, for computing the census on the random networks, a g-trie will be created with the
+   subgraphs that appear at least once.
+
+ - [-c <file>] or [--create <file>]
+   Create g-trie from 'file' with subgraph list (one subgraph per line, see above examples)
+   G-Trie is written to the file indicated by '-o'
+
+ - [-o <file>] or [--output <file>]
+   Name for the file which will contain the results of the computation.
+
+ - [-oc <file>] or [--occurrences <file>]
+   Show/Dump all individual occurrences of subgraphs in the original network to 'file'
+
+ - [-t <format>] or [--type <format>]
+   Format of the results. 'format' can be:
+   . "txt": text file
+   . "html": html file, ready for being seen on a browser
+     (need connection to internet for graph drawing)
+
+ - [-r <int>] or [--random <int>]
+   Number of random networks to generate. (default is 0)
+   Leave at zero to just compute frequency.
+
+ - [-rs <int>] or [--rseed <int>]
+   Seed for random number generation (default is time())
+
+ - [-re <int>] or [--rexchanges <int>]
+   Number of exchanges per edge on randomization. (default is 3)
+
+ - [-rt <int>] or [--tries <int>]
+   Number of tries per edge on randomization. (default is 10)
+
+----------------------------------------------------
