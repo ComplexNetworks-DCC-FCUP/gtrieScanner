@@ -22,7 +22,13 @@ Last Update: 11/02/2012
 #include <stdio.h>
 #include <algorithm>
 
+#ifdef PRINT_CALLS
+FILE* fn;
+
 DynamicGraph::DynamicGraph(RepType _r) {
+  #ifdef PRINT_CALLS
+  fn = fopen("hasEdgeCalls.txt", "w");
+
   _rtype = _r;
   _init();
 }
@@ -145,6 +151,9 @@ void DynamicGraph::rmEdge(int a, int b) {
 }
 
 bool DynamicGraph::hasEdge(int a, int b) {
+  #ifdef PRINT_CALLS
+  fprintf(fn, "%d %d\n", a, b);
+
   if (_rtype == MATRIX)
     return _adjM[a][b];
   return false;

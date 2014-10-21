@@ -178,7 +178,7 @@ void CmdLine::prepare_graph() {
     Error::msg("No valid graph format specified");
 
   // Read the graph file
-  g = new GraphMatrix();
+  g = new DynamicGraph(MATRIX);
 
   // Use simple or simple_weight text format
   if (format == SIMPLE)

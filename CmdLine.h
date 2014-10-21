@@ -20,7 +20,7 @@ Last Update: 11/02/2012
 #ifndef _CMDLINE_
 #define _CMDLINE
 
-#include "GraphMatrix.h"
+#include "DynamicGraph.h"
 #include "GraphUtils.h"
 #include "Error.h"
 #include "Common.h"

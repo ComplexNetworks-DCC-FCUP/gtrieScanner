@@ -19,7 +19,6 @@ Last Update: 11/02/2012
 
 #include "Isomorphism.h"
 #include "GraphUtils.h"
-#include "GraphMatrix.h"
 #include "Conditions.h"
 
 // Static variables
