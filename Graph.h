@@ -26,8 +26,6 @@ typedef enum{DIRECTED, UNDIRECTED} GraphType;
 
 class Graph {
  public:
-  virtual bool **adjacencyMatrix() = 0;
-
   virtual ~Graph() {};
 
   virtual void createGraph(int n, GraphType t) = 0; // create graph with n nodes

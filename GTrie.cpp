@@ -32,8 +32,8 @@ Last Update: 11/02/2012
 
 int *GTrieNode::mymap;
 bool *GTrieNode::used;
-bool **GTrieNode::adjM;
 int **GTrieNode::fastnei;
+Graph *GTrieNode::g;
 int *GTrieNode::numnei;
 int GTrieNode::glk;
 int GTrieNode::numNodes;
@@ -434,18 +434,18 @@ void GTrieNode::goCondUndir() {
       j = glaux;
     }
   }
-
+  
   glaux = j;
   ncand = ci;
   for (p=&fastnei[ncand][j-1], ci= glaux-1; ci>=0; ci--, p--) {    
     i = *p;
+
     if (i<mylim) break;
     if (used[i]) continue;
     mymap[glk] = i;
     
-    bool *b = &adjM[i][0];
     for (j=0; j<glk; j++)
-      if (out[j] != *(b+mymap[j]))
+      if (out[j] != g->hasEdge(i, mymap[j]))
 	break;
     if (j<glk) continue;
     
@@ -454,7 +454,7 @@ void GTrieNode::goCondUndir() {
       if (Global::show_occ) {
 	for (int k = 0; k<=glk; k++)
 	  for (int l = 0; l<=glk; l++)
-	    fputc(adjM[mymap[k]][mymap[l]]?'1':'0', Global::occ_file);
+	    fputc(g->hasEdge(mymap[k],mymap[l])?'1':'0', Global::occ_file);
 	fputc(':', Global::occ_file);
 	for (int k = 0; k<=glk; k++)
 	  fprintf(Global::occ_file, " %d", mymap[k]+1);
@@ -518,12 +518,12 @@ void GTrieNode::goCondDir() {
     mymap[glk] = i;
 
     for (j=0; j<glk; j++)
-      if (in[j] != adjM[mymap[j]][i])
+      if (in[j] != g->hasEdge(mymap[j], i))
 	break;
     if (j<glk) continue;
-    bool *b = &adjM[i][0];
+
     for (j=0; j<glk; j++)
-      if (out[j] != *(b+mymap[j]))
+      if (out[j] != g->hasEdge(i, mymap[j]))
 	break;
     if (j<glk) continue;
     
@@ -532,7 +532,7 @@ void GTrieNode::goCondDir() {
       if (Global::show_occ) {
 	for (int k = 0; k<=glk; k++)
 	  for (int l = 0; l<=glk; l++)
-	    fputc(adjM[mymap[k]][mymap[l]]?'1':'0', Global::occ_file);
+	    fputc(g->hasEdge(mymap[k], mymap[l])?'1':'0', Global::occ_file);
 	fputc(':', Global::occ_file);
 	for (int k = 0; k<=glk; k++)
 	  fprintf(Global::occ_file, " %d", mymap[k]+1);
@@ -903,7 +903,7 @@ void GTrie::census(Graph *g) {
   GTrieNode::used  = new bool[num_nodes];
   GTrieNode::numNodes = num_nodes;
   GTrieNode::fastnei  = g->matrixNeighbours();
-  GTrieNode::adjM     = g->adjacencyMatrix();
+  GTrieNode::g        = g;
   GTrieNode::numnei   = g->arrayNumNeighbours(); 
   
   if (g->type() == DIRECTED) GTrieNode::isdir = true;
@@ -990,8 +990,8 @@ void GTrie::censusSample(Graph *g, double *p) {
   GTrieNode::used  = new bool[num_nodes];
   GTrieNode::numNodes = num_nodes;
   GTrieNode::fastnei  = g->matrixNeighbours();
-  GTrieNode::adjM     = g->adjacencyMatrix();
-  GTrieNode::numnei   = g->arrayNumNeighbours(); 
+  GTrieNode::numnei   = g->arrayNumNeighbours();
+  GTrieNode::g        = g;
   GTrieNode::prob     = p;
 
   if (g->type() == DIRECTED) GTrieNode::isdir = true;
@@ -1073,12 +1073,12 @@ void GTrieNode::goCondSample() {
 
     if (isdir) {  
       for (j=0; j<glk; j++)
-	if (in[j]  != adjM[mymap[j]][i] ||
-	    out[j] != adjM[i][mymap[j]])
+	if (in[j]  != g->hasEdge(mymap[j], i) ||
+	    out[j] != g->hasEdge(i, mymap[j]))
 	  break;
     } else {
       for (j=0; j<glk; j++)
-	if (in[j]  != adjM[mymap[j]][i])
+	if (in[j]  != g->hasEdge(mymap[j], i))
 	  break;
     }
     if (j<glk) continue;
@@ -1087,7 +1087,7 @@ void GTrieNode::goCondSample() {
       if (Global::show_occ) {
 	for (int k = 0; k<=glk; k++)
 	  for (int l = 0; l<=glk; l++)
-	    fputc(adjM[mymap[k]][mymap[l]]?'1':'0', Global::occ_file);
+	    fputc(g->hasEdge(mymap[k], mymap[l])?'1':'0', Global::occ_file);
 	fputc(':', Global::occ_file);
 	for (int k = 0; k<=glk; k++)
 	  fprintf(Global::occ_file, " %d", mymap[k]+1);

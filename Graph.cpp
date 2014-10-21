@@ -53,7 +53,6 @@ Graph::Graph(bool a, Graph &g) {
 // -----------------------------------------------
 
 void Graph::_init() {
-  _adjM = NULL;
   _adjL = NULL;
   _adjLI = NULL;
   _neighbours = NULL;
@@ -72,8 +71,6 @@ void Graph::_createGraph(int num_nodes) {
 
   _delete();
 
-  _adjM = new int*[num_nodes];
-  for (int i=0; i<num_nodes; i++) _adjM[i] = new int[num_nodes];
   _adjL = new list<iPair>[num_nodes];
   _adjLI = new list<iPair>[num_nodes];
   _neighbours = new list<int>[num_nodes];
@@ -88,11 +85,6 @@ void Graph::_createGraph(int num_nodes) {
 }
 
 void Graph::_delete() {
-  if (_adjM!=NULL) {
-    for (int i=0; i<_num_nodes; i++)
-      if (_adjM[i]!=NULL) delete[] _adjM[i];
-    delete[] _adjM;
-  }
   if (_adjL!=NULL) delete[] _adjL;
   if (_adjLI!=NULL) delete[] _adjLI;
   if (_neighbours=NULL) delete[] _neighbours;
@@ -115,71 +107,8 @@ void Graph::zero() {
     _adjL[i].clear();
     _adjLI[i].clear();
     _neighbours[i].clear();
-    for (j=0; j<_num_nodes;j++)
-      _adjM[i][j]=0;
   }
 
-}
-
-void Graph::addEdge(int a, int b, int c) {
-  iPair aux, aux2;
-
-  if (c==0) return;
-  if (_adjM[a][b]) return;
-
-  _adjM[a][b] = c;
-
-  aux.first = b;
-  aux.second = c;
-  _adjL[a].push_back(aux);
-
-  aux2.first = a;
-  aux2.second = c;
-  _adjLI[b].push_back(aux2);
-
-  if (!_adjM[b][a]) {
-    _neighbours[a].push_back(b);
-    _neighbours[b].push_back(a);
-  }
-
-  _out[a]++;
-  _in[b]++;
-
-  _num_edges++;
-}
-
-void Graph::rmEdge(int a, int b, int c) {
-  iPair aux, aux2;
-
-  _adjM[a][b] = 0;
-
-  aux.first = b;
-  aux.second = c;
-  _adjL[a].remove(aux);
-
-  aux2.first = a;
-  aux2.second = c;
-  _adjLI[b].remove(aux);
-
-  if (!_adjM[b][a]) {
-    _neighbours[a].remove(b);
-    _neighbours[b].remove(a);
-  }
-
-  _out[a]--;
-  _in[b]++;
-
-  _num_edges--;
-}
-
-void Graph::rmEdgesNode(int v) {
-  int i;
-
-  for (i=0; i<numNodes(); i++) 
-    if (getEdge(i,v))
-      rmEdge(i,v,getEdge(i,v));
-    if (getEdge(v,i))
-      rmEdge(v,i,getEdge(v,i));
 }
 
 // -----------------------------------------------

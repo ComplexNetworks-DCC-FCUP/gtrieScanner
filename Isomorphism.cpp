@@ -60,13 +60,11 @@ void Isomorphism::finishNauty() {
 void Isomorphism::canonicalStrNauty(Graph *myg, int *v, char *s) {
   int i, j, aux;
 
-  static bool **adjM = myg->adjacencyMatrix();
-
   for (i=0; i<n; i++) {
     gv = GRAPHROW(g,i,m);
     EMPTYSET(gv,m);
     for (j=0; j<n; j++)
-      if (adjM[v[i]][v[j]]) ADDELEMENT(gv,j);
+      if (myg->hasEdge(v[i], v[j])) ADDELEMENT(gv,j);
   }
 
   nauty(g,lab,ptn,NULL,orbits,&options,&stats,

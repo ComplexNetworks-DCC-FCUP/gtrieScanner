@@ -38,8 +38,8 @@ class GTrieNode {
 
   static int *mymap;
   static bool *used;
-  static bool **adjM;
   static int **fastnei;
+  static Graph *g;
   static int *numnei;
   static int glk;
   static int numNodes;

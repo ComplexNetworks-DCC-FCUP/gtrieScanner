@@ -30,7 +30,6 @@ GMap *fastf;
 Graph *fastg;
 VVsmallNode *fastvv;
 bool *fasts;
-bool **adj;
 
 int int_compare(const void *a, const void *b) {
   return (*((int *)b)) - (*((int *)a));
@@ -91,7 +90,6 @@ void Conditions::findAutomorphisms(Graph *G, VVsmallNode *vv) {
   fastg  = G;
   fastvv = vv;
   fasts  = support;
-  adj = G->adjacencyMatrix();
   for (g=0; g<_subgraph_size; g++)
     if (support[g*_subgraph_size]) {
       f->add(0,g);
@@ -165,8 +163,8 @@ void Conditions::isomorphicExtensions() {
 
       for (j=0; j<_subgraph_size; j++)
 	if (fastf->f[j]!=INVALID) {
-	  if      (adj[m][j] != adj[n][fastf->f[j]])      {flag=true; break;}
-	  else if (adj[j][m] != adj[fastf->f[j]][n])      {flag=true; break;}
+	  if      (fastg->hasEdge(m, j) != fastg->hasEdge(n, fastf->f[j]))      {flag=true; break;}
+	  else if (fastg->hasEdge(j, m) != fastg->hasEdge(fastf->f[j], n))      {flag=true; break;}
 	}
 
       if (!flag) {	
