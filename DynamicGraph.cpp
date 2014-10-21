@@ -140,6 +140,10 @@ void DynamicGraph::addEdge(int a, int b) {
   }
 }
 
+void DynamicGraph::rmEdge(int a, int b) {
+  fprintf(stderr, "rmEdge is deprecated for the time being\n");
+}
+
 bool DynamicGraph::hasEdge(int a, int b) {
   if (_rtype == MATRIX)
     return _adjM[a][b];

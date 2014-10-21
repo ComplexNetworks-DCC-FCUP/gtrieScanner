@@ -63,8 +63,10 @@ class DynamicGraph : public Graph {
   int numEdges() {return _num_edges;}
 
   void addEdge(int a, int b); // add edge from a to b
+  void rmEdge(int a, int b);  // remove edge from a to b
 
   bool hasEdge(int a, int b);
+  bool isConnected(int a, int b) {return hasEdge(a, b) || hasEdge(b, a);}
 
   int nodeOutEdges(int a) {return _out[a];}
   int nodeInEdges(int a)  {return _in[a];}
@@ -75,6 +77,7 @@ class DynamicGraph : public Graph {
   void makeVectorNeighbours();
 
   vector<int> *neighbours(int a) {return &_neighbours[a];}
+  int **matrixNeighbours()       {return _array_neighbours;}
   int *arrayNeighbours(int a)    {return _array_neighbours[a];}
   int *arrayNumNeighbours()      {return _num_neighbours;}
   vector<int> *outEdges(int a)   {return &_adjOut[a];}

@@ -22,6 +22,7 @@ Last Update: 11/02/2012
 
 #include "Common.h"
 #include "Graph.h"
+#include "DynamicGraph.h"
 
 #define BASE_FORMAT      95
 #define BASE_FIRST       ' '
@@ -109,9 +110,11 @@ class GTrieNode {
 class GTrie {
  private:
   GTrieNode *_root;
+  RepType rtype;
 
  public:
   GTrie();
+  GTrie(RepType _r);
   ~GTrie();
 
   void insertGraph(Graph *g);

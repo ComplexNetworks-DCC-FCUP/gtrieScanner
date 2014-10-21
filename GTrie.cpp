@@ -18,7 +18,7 @@ Last Update: 11/02/2012
 ---------------------------------------------------- */
 
 #include "GTrie.h"
-#include "GraphMatrix.h"
+#include "DynamicGraph.h"
 #include "GraphTree.h"
 #include "Isomorphism.h"
 #include "GraphUtils.h"
@@ -787,7 +787,14 @@ void GTrieNode::populateMap(mapStringInt *m, char *s, int size) {
 
 // -------------------------------------
 
+GTrie::GTrie(RepType _r) {
+  rtype = _r;
+  _root = new GTrieNode(0);
+  _root->cond_ok = _root->cond_this_ok = true;
+}
+
 GTrie::GTrie() {
+  rtype = MATRIX;
   _root = new GTrieNode(0);
   _root->cond_ok = _root->cond_this_ok = true;
 }
@@ -812,10 +819,10 @@ int GTrie::frequencyGraphString(int size, const char *s) {
   char larger[size*size+1];
   Isomorphism::canonicalBasedNauty(s, larger, size);
 
-  Graph *g = new GraphMatrix();
-  GraphUtils::strToGraph(g, larger, size, DIRECTED); // May change later
-  int aux = _root->frequencyGraph(g);
-  delete g;
+  Graph *gr = new DynamicGraph(rtype);
+  GraphUtils::strToGraph(gr, larger, size, DIRECTED); // May change later
+  int aux = _root->frequencyGraph(gr);
+  delete gr;
   
   return aux;
 }
@@ -826,15 +833,15 @@ void GTrie::insertGraphString(int size, const char *s) {
   Isomorphism::canonicalBigger(s, larger, size);
 
 
-  Graph *g = new GraphMatrix();
-  GraphUtils::strToGraph(g, larger, size, DIRECTED); // May change later
+  Graph *gr = new DynamicGraph(rtype);
+  GraphUtils::strToGraph(gr, larger, size, DIRECTED); // May change later
   list<iPair> *cond = new list<iPair>;
-  Conditions::symmetryConditions(g, cond);
+  Conditions::symmetryConditions(gr, cond);
 
-  insertGraphCond(g, cond);
+  insertGraphCond(gr, cond);
 
   delete cond;
-  delete g;
+  delete gr;
 }
 
 // Populate g-trie with subgraphs of 'size' read from file 's'
@@ -862,20 +869,20 @@ void GTrie::insertGraphNautyString(int size, const char *s, bool dir, int label)
   else
     Isomorphism::canonicalBasedNauty(s, larger, size);
 
-  Graph *g = new GraphMatrix();
+  Graph *gr = new DynamicGraph(rtype);
 
-  if (dir)  GraphUtils::strToGraph(g, larger, size, DIRECTED);
-  else      GraphUtils::strToGraph(g, larger, size, UNDIRECTED);
+  if (dir)  GraphUtils::strToGraph(gr, larger, size, DIRECTED);
+  else      GraphUtils::strToGraph(gr, larger, size, UNDIRECTED);
 
-  g->makeArrayNeighbours();
+  gr->makeArrayNeighbours();
 
   list<iPair> *cond = new list<iPair>;
-  Conditions::symmetryConditions(g, cond);  
+  Conditions::symmetryConditions(gr, cond);  
 
-  insertGraphCond(g, cond);
+  insertGraphCond(gr, cond);
 
   delete cond;
-  delete g;
+  delete gr;
 }
 
 double GTrie::compressionRate() {

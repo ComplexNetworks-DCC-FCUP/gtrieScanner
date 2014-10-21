@@ -23,6 +23,7 @@ CLIBS=
 SRC =                   \
 	CmdLine.cpp	\
 	GraphMatrix.cpp	\
+        DynamicGraph.cpp \
 	GraphUtils.cpp	\
 	Esu.cpp		\
 	Conditions.cpp	\
