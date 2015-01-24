@@ -22,8 +22,9 @@ Last Update: 27/09/2014
 #define _DYNGRAPH_
 
 #include "Graph.h"
+#include <math.h>
 
-typedef enum{MATRIX, BSLIST} RepType;
+typedef enum{MATRIX, BSLIST, HASH} RepType;
 
 class DynamicGraph : public Graph {
  private:
@@ -42,6 +43,9 @@ class DynamicGraph : public Graph {
   vector<int> *_adjIn;
   vector<int> *_neighbours;
 
+  list<int> **_hashM;
+  int _sqrt_nodes;
+  
   void _init();
   void _delete();
 

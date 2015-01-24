@@ -49,17 +49,19 @@ void GraphUtils::readFileTxt(Graph *g, const char *s, bool dir, bool weight) {
 
   for (i=0; i<size; i++) {
     if (va[i]==vb[i]) {
-      fprintf(stderr, "Self-Loop on %d ignored\n", va[i]);
+      //fprintf(stderr, "Self-Loop on %d ignored\n", va[i]);
       continue; // discard self loops!
     }
     if (g->hasEdge(va[i]-1, vb[i]-1))
-      fprintf(stderr,"Repeated connection! %d %d\n", va[i], vb[i]);
+      ;//fprintf(stderr,"Repeated connection! %d %d\n", va[i], vb[i]);
     else 
       g->addEdge(va[i]-1, vb[i]-1);
     if (!dir) g->addEdge(vb[i]-1, va[i]-1);
   } 
   va.clear();
   vb.clear();
+
+  g->prepareGraph();
 }
 
 void GraphUtils::strToGraph(Graph *g, const char *s, int size, bool dir) {
@@ -70,7 +72,8 @@ void GraphUtils::strToGraph(Graph *g, const char *s, int size, bool dir) {
 
   for (i=0; i<size; i++)
     for (j=0; j<size; j++)
-      if (s[i*size+j]=='1') g->addEdge(i, j);  
+      if (s[i*size+j]=='1') g->addEdge(i, j);
+  g->prepareGraph();
 }
 
 

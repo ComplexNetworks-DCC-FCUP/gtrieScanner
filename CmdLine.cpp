@@ -214,6 +214,8 @@ void CmdLine::compute_original() {
     printf("Graph Type: Adjacency Matrix\n");
   else if (graph_type == BSLIST)
     printf("Graph Type: Adjacency List + Binary Search\n");
+  else if (graph_type == HASH)
+    printf("Graph Type: Hash Table of Adjacency Matrix\n");
 
   // Compute frequency
   Global::show_occ = occurrences;
@@ -604,6 +606,9 @@ void CmdLine::parse_cmdargs(int argc, char **argv) {
       switch (vl) {
         case 1:
           graph_type = BSLIST;
+          break;
+        case 2:
+          graph_type = HASH;
           break;
         default:
           graph_type = MATRIX;

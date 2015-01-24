@@ -60,11 +60,19 @@ void DynamicGraph::_init() {
 void DynamicGraph::_delete() {
   int i;
 
-  if (_adjM!=NULL) {
-    for (i=0; i<_num_nodes; i++)
-      if (_adjM[i]!=NULL) delete[] _adjM[i];
+  if (_adjM != NULL) {
+    for (i = 0; i < _num_nodes; i++)
+      if (_adjM[i] != NULL)
+        delete[] _adjM[i];
     delete[] _adjM;
   }
+
+/*  if (_hashM != NULL) {
+    for (i = 0; i < _num_nodes; i++)
+      if (_hashM[i] != NULL) delete[] _hashM[i];
+    delete[] _hashM;
+    }*/
+  
   if (_adjIn!=NULL) delete[] _adjIn;
   if (_adjOut!=NULL) delete[] _adjOut;
   if (_neighbours!=NULL) delete[] _neighbours;
@@ -104,14 +112,17 @@ void DynamicGraph::createGraph(int n, GraphType t) {
   int i;
 
   _num_nodes = n;
+  _sqrt_nodes = (int)sqrt(n) + 1;
   _type = t;
 
   _delete();
 
   if (_rtype == MATRIX) {
     _adjM = new bool*[n];  
-    for (i=0; i<n; i++) _adjM[i] = new bool[n];
+    for (i = 0; i < n; i++)
+      _adjM[i] = new bool[n];
   }
+  
   _adjIn      = new vector<int>[n];
   _adjOut     = new vector<int>[n];
   _neighbours = new vector<int>[n];
@@ -133,6 +144,17 @@ void DynamicGraph::prepareGraph() {
       sort(_adjOut[i].begin(), _adjOut[i].end());
       sort(_adjIn[i].begin(), _adjIn[i].end());
     }
+  }
+  else if (_rtype == HASH) {
+    _hashM = new list<int>*[_num_nodes];
+
+    int i, j;
+    for (i = 0; i < _num_nodes; i++)
+      _hashM[i] = new list<int>[_sqrt_nodes];
+
+    for (i = 0; i < _num_nodes; i++)
+      for (j = 0; j < _out[i]; j++)
+        _hashM[i][_adjOut[i][j] % _sqrt_nodes].push_back(_adjOut[i][j]);
   }
 }
 
@@ -166,35 +188,41 @@ bool DynamicGraph::hasEdge(int a, int b) {
   fprintf(fn, "%d %d\n", a, b);
   #endif
 
+  if (!ready) {
+    int i;
+    for (i = 0; i < _out[a]; i++)
+      if (_adjOut[a][i] == b)
+        return true;
+    return false;
+  }
+
   if (_rtype == MATRIX)
     return _adjM[a][b];
   else if (_rtype == BSLIST) {
-    if (ready) {
-      int i;
-      for (i = 0; i < _out[a]; i++)
-        if (_adjOut[a][i] == b)
-          return true;
+    int lo = 0, hi = _out[a] - 1, med, vl;
+    if (hi < 0)
       return false;
+    
+    while (lo <= hi) {
+      med = (lo + hi) >> 1;
+      vl = _adjOut[a][med];
+      
+      if (vl < b)
+        lo = med + 1;
+      else if (vl > b)
+        hi = med - 1;
+      else if (vl == b)
+        return true;
     }
-    else {
-      int lo = 0, hi = _out[a] - 1, med, vl;
-      if (hi < 0)
-        return false;
-  
-      while (lo <= hi) {
-        med = (lo + hi) >> 1;
-        vl = _adjOut[a][med];
 
-        if (vl < b)
-          lo = med + 1;
-        else if (vl > b)
-          hi = med - 1;
-        else if (vl == b)
-          return true;
-      }
-
-      return false;
-    }
+    return false;
+  }
+  else if (_rtype == HASH) {
+    list<int>::iterator it = _hashM[a][b % _sqrt_nodes].begin();
+    for (; it != _hashM[a][b % _sqrt_nodes].end(); it++)
+      if (*it == b)
+        return true;
+    return false;
   }
 
   return false;

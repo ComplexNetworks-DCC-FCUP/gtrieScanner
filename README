@@ -126,6 +126,12 @@ Possible Options
    Number of tries per edge on randomization. (default is 10)
 
  - [-tp <int>] or [--graphtype <int>]
-   Graph tepresentation type (0 - Matrix, 1 - List + BSearch)
+   Graph representation type (See detail list of types below). (default is 0)
 
+
+List of graph representation type codes (from flag '-tp'):
+  0: Standard Adjacency Matrix;
+  1: Adjacency List with Binary Search;
+  2: Hash Table per line of Adjacency Matrix;
+   
 ----------------------------------------------------

@@ -54,6 +54,8 @@ class Graph {
   virtual void makeArrayNeighbours() = 0;  // Create arrays of neighbours and discard vectors
   virtual void makeVectorNeighbours() = 0; // Create vectors of neighbours and discard arrays
 
+  virtual void prepareGraph() = 0;
+
   virtual vector<int> *neighbours(int a) = 0; // Neighbours of node a
   virtual int **matrixNeighbours() = 0;            // Neighbours of node a in array form
   virtual int *arrayNeighbours(int a) = 0;         // Neighbours of node a in array form

@@ -13,29 +13,29 @@ CC=g++
 
 # Default Options to use
 # CFLAGS= -Wall -Wno-write-strings -O0 -g
-CFLAGS= -Wno-write-strings -O3
+CFLAGS= -Wno-write-strings -O3 -g
 #CFLAGSFINAL= -O3
 CLIBS=
 
 #NAUTYSRC= nauty.c nautil.c naugraph.c
 
 # Source files
-SRC =                   \
-	CmdLine.cpp	\
-	GraphMatrix.cpp	\
+SRC =                    \
+	CmdLine.cpp      \
+	GraphMatrix.cpp  \
         DynamicGraph.cpp \
-	GraphUtils.cpp	\
-	Esu.cpp		\
-	Conditions.cpp	\
-	Isomorphism.cpp	\
-	Error.cpp	\
-	GTrie.cpp	\
-	Timer.cpp	\
-	Random.cpp	\
-	GraphTree.cpp	\
-	nauty/nauty.c	\
-	nauty/nautil.c	\
-	nauty/naugraph.c	\
+	GraphUtils.cpp   \
+	Esu.cpp          \
+	Conditions.cpp   \
+	Isomorphism.cpp  \
+	Error.cpp        \
+	GTrie.cpp        \
+	Timer.cpp        \
+	Random.cpp       \
+	GraphTree.cpp    \
+	nauty/nauty.c    \
+	nauty/nautil.c   \
+	nauty/naugraph.c \
 	main.cpp
 
 OBJ =  ${SRC:.cpp=.o}
