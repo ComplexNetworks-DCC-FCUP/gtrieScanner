@@ -50,7 +50,8 @@ void DynamicGraph::_init() {
   _adjM             = NULL;
   _adjOut           = NULL;
   _adjIn            = NULL;
-  _neighbours       = NULL;  
+  _neighbours       = NULL;
+  cache             = NULL;
   _in               = NULL;
   _out              = NULL;
   _num_neighbours   = NULL;
@@ -66,17 +67,12 @@ void DynamicGraph::_delete() {
         delete[] _adjM[i];
     delete[] _adjM;
   }
-
-/*  if (_hashM != NULL) {
-    for (i = 0; i < _num_nodes; i++)
-      if (_hashM[i] != NULL) delete[] _hashM[i];
-    delete[] _hashM;
-    }*/
   
   if (_adjIn!=NULL) delete[] _adjIn;
   if (_adjOut!=NULL) delete[] _adjOut;
   if (_neighbours!=NULL) delete[] _neighbours;
-
+  
+  if (cache!=NULL) delete[] cache;
   if (_in!=NULL) delete[] _in;
   if (_out!=NULL) delete[] _out;
   if (_out!=NULL) delete[] _num_neighbours;
@@ -95,10 +91,11 @@ void DynamicGraph::zero() {
   _num_edges = 0;
   ready = false;
 
-  for (i=0; i<_num_nodes;i++) {
+  for (i = 0; i < _num_nodes; i++) {
     _in[i] = 0;
     _out[i] = 0;
     _num_neighbours[i] = 0;
+    cache[i] = -1;
     _adjIn[i].clear();
     _adjOut[i].clear();
     _neighbours[i].clear();
@@ -127,7 +124,8 @@ void DynamicGraph::createGraph(int n, GraphType t) {
   _adjOut     = new vector<int>[n];
   _neighbours = new vector<int>[n];
 
-  _in             = new int[n]; 
+  cache           = new int[n];
+  _in             = new int[n];
   _out            = new int[n];
   _num_neighbours = new int[n];
 
@@ -218,10 +216,16 @@ bool DynamicGraph::hasEdge(int a, int b) {
     return false;
   }
   else if (_rtype == HASH) {
-    list<int>::iterator it = _hashM[a][b % _sqrt_nodes].begin();
-    for (; it != _hashM[a][b % _sqrt_nodes].end(); it++)
-      if (*it == b)
+    if (cache[a] == b)
+      return true;
+
+    list<int>* ls = &(_hashM[a][b % _sqrt_nodes]);
+    list<int>::iterator it = (*ls).begin();
+    for (; it != (*ls).end(); it++)
+      if (*it == b) {
+        cache[a] = b;
         return true;
+      }
     return false;
   }
 
