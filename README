@@ -125,4 +125,7 @@ Possible Options
  - [-rt <int>] or [--tries <int>]
    Number of tries per edge on randomization. (default is 10)
 
+ - [-tp <int>] or [--graphtype <int>]
+   Graph tepresentation type (0 - Matrix, 1 - List + BSearch)
+
 ----------------------------------------------------

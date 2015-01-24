@@ -51,6 +51,7 @@ class DynamicGraph : public Graph {
   ~DynamicGraph();
 
   RepType _rtype;
+  bool ready;
 
   void createGraph(int n, GraphType t);
 

@@ -50,6 +50,7 @@ double CmdLine::time_random;
 MethodType CmdLine::method;
 FormatType CmdLine::format;
 OutputType CmdLine::output;
+RepType CmdLine::graph_type;
 Graph *CmdLine::g;
 
 FILE *CmdLine::f_output;
@@ -178,7 +179,7 @@ void CmdLine::prepare_graph() {
     Error::msg("No valid graph format specified");
 
   // Read the graph file
-  g = new DynamicGraph(MATRIX);
+  g = new DynamicGraph(graph_type);
 
   // Use simple or simple_weight text format
   if (format == SIMPLE)
@@ -207,6 +208,12 @@ void CmdLine::compute_original() {
     printf("Method:     GTRIE with file containing complete g-trie\n");
   else if (method == SUBGRAPHS)
     printf("Method:     GTRIE with subgraphs read from file\n");
+
+  // Print representation description
+  if (graph_type == MATRIX)
+    printf("Graph Type: Adjacency Matrix\n");
+  else if (graph_type == BSLIST)
+    printf("Graph Type: Adjacency List + Binary Search\n");
 
   // Compute frequency
   Global::show_occ = occurrences;
@@ -484,6 +491,7 @@ void CmdLine::defaults() {
   create = false;
   format = SIMPLE_WEIGHT;
   output = TEXT;
+  graph_type = MATRIX;
   occurrences = false;
 }
 
@@ -590,6 +598,18 @@ void CmdLine::parse_cmdargs(int argc, char **argv) {
       random_tries = atoi(argv[++i]);
     }
 
+    // Type of graph representation
+    else if (!strcmp("-tp",argv[i]) || !strcmp("--graphtype",argv[i])) {
+      int vl = atoi(argv[++i]);
+      switch (vl) {
+        case 1:
+          graph_type = BSLIST;
+          break;
+        default:
+          graph_type = MATRIX;
+          break;
+      }
+    }
   }
 
   // If no random seed given, initialize with time
