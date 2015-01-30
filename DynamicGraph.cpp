@@ -26,6 +26,11 @@ Last Update: 11/02/2012
 FILE* fn;
 #endif
 
+struct DynamicGraph::l_list {
+  int value;
+  l_list* next;
+};
+
 DynamicGraph::DynamicGraph(RepType _r) {
   #ifdef PRINT_CALLS
   fn = fopen("hasEdgeCalls.txt", "w");
@@ -52,6 +57,7 @@ void DynamicGraph::_init() {
   _adjIn            = NULL;
   _neighbours       = NULL;
   cache             = NULL;
+  _hashM            = NULL;
   _in               = NULL;
   _out              = NULL;
   _num_neighbours   = NULL;
@@ -71,15 +77,37 @@ void DynamicGraph::_delete() {
   if (_adjIn!=NULL) delete[] _adjIn;
   if (_adjOut!=NULL) delete[] _adjOut;
   if (_neighbours!=NULL) delete[] _neighbours;
-  
-  if (cache!=NULL) delete[] cache;
-  if (_in!=NULL) delete[] _in;
-  if (_out!=NULL) delete[] _out;
-  if (_out!=NULL) delete[] _num_neighbours;
 
-  if (_array_neighbours!=NULL) {
-    for (i=0; i<_num_nodes; i++)
-      if (_array_neighbours[i]!=NULL) delete[] _array_neighbours[i];
+  if (_hashM != NULL) {
+    int j;
+    for (i = 0; i < _num_nodes; i++) {
+      for (j = 0; j < _sqrt_nodes; j++) {
+        l_list* cur = _hashM[i][j], *prev;
+        while (cur != NULL) {
+          prev = cur;
+          cur = cur->next;
+          delete prev;
+        }
+      }
+
+      delete[] _hashM[i];
+    }
+    delete[] _hashM;
+  }
+    
+  if (cache != NULL) {
+    for (i = 0; i < _num_nodes; i++)
+      delete[] cache[i];
+    delete[] cache;
+  }
+  if (_in != NULL) delete[] _in;
+  if (_out != NULL) delete[] _out;
+  if (_out != NULL) delete[] _num_neighbours;
+
+  if (_array_neighbours != NULL) {
+    for (i = 0; i < _num_nodes; i++)
+      if (_array_neighbours[i] != NULL)
+        delete[] _array_neighbours[i];
     delete[] _array_neighbours;
   }
 
@@ -95,7 +123,8 @@ void DynamicGraph::zero() {
     _in[i] = 0;
     _out[i] = 0;
     _num_neighbours[i] = 0;
-    cache[i] = -1;
+    for (j = 0; j <= _log_nodes; j++)
+      cache[i][j] = -1;
     _adjIn[i].clear();
     _adjOut[i].clear();
     _neighbours[i].clear();
@@ -106,13 +135,17 @@ void DynamicGraph::zero() {
 }
 
 void DynamicGraph::createGraph(int n, GraphType t) {
+  _delete();
+  
   int i;
-
   _num_nodes = n;
   _sqrt_nodes = (int)sqrt(n) + 1;
   _type = t;
-
-  _delete();
+  int tmp_log = (int)log2((double) n);
+  _log_nodes = 1;
+  while (_log_nodes < tmp_log)
+    _log_nodes *= 2;
+  _log_nodes--;
 
   if (_rtype == MATRIX) {
     _adjM = new bool*[n];  
@@ -124,7 +157,9 @@ void DynamicGraph::createGraph(int n, GraphType t) {
   _adjOut     = new vector<int>[n];
   _neighbours = new vector<int>[n];
 
-  cache           = new int[n];
+  cache           = new int*[n];
+  for (i = 0; i < n; i++)
+    cache[i] = new int[_log_nodes + 1];
   _in             = new int[n];
   _out            = new int[n];
   _num_neighbours = new int[n];
@@ -144,15 +179,24 @@ void DynamicGraph::prepareGraph() {
     }
   }
   else if (_rtype == HASH) {
-    _hashM = new list<int>*[_num_nodes];
+    _hashM = new l_list**[_num_nodes];
 
     int i, j;
-    for (i = 0; i < _num_nodes; i++)
-      _hashM[i] = new list<int>[_sqrt_nodes];
+    for (i = 0; i < _num_nodes; i++) {
+      _hashM[i] = new l_list*[_sqrt_nodes];
 
-    for (i = 0; i < _num_nodes; i++)
-      for (j = 0; j < _out[i]; j++)
-        _hashM[i][_adjOut[i][j] % _sqrt_nodes].push_back(_adjOut[i][j]);
+      for (j = 0; j < _sqrt_nodes; j++)
+        _hashM[i][j] = NULL;
+    }
+
+    for (i = 0; i < _num_nodes; i++) {
+      for (j = 0; j < _out[i]; j++) {
+        l_list* n_node = new l_list();
+        n_node->value = _adjOut[i][j];
+        n_node->next = _hashM[i][_adjOut[i][j] % _sqrt_nodes];
+        _hashM[i][_adjOut[i][j] % _sqrt_nodes] = n_node;
+      }
+    }
   }
 }
 
@@ -216,16 +260,18 @@ bool DynamicGraph::hasEdge(int a, int b) {
     return false;
   }
   else if (_rtype == HASH) {
-    if (cache[a] == b)
+    if (cache[a][b & _log_nodes] == b)
       return true;
 
-    list<int>* ls = &(_hashM[a][b % _sqrt_nodes]);
-    list<int>::iterator it = (*ls).begin();
-    for (; it != (*ls).end(); it++)
-      if (*it == b) {
-        cache[a] = b;
+    l_list* cur = _hashM[a][b % _sqrt_nodes];
+    while (cur != NULL) {
+      if (cur->value == b) {
+        cache[a][b & _log_nodes] = b;
         return true;
       }
+
+      cur = cur->next;
+    }
     return false;
   }
 
@@ -234,13 +280,13 @@ bool DynamicGraph::hasEdge(int a, int b) {
 
 void DynamicGraph::sortNeighbours() {
   int i;
-  for (i=0; i<_num_nodes; i++)
+  for (i = 0; i < _num_nodes; i++)
     sort(_neighbours[i].begin(), _neighbours[i].begin()+_neighbours[i].size());
 }
 
 void DynamicGraph::sortNeighboursArray() {
   int i;
-  for (i=0; i<_num_nodes; i++)
+  for (i = 0; i < _num_nodes; i++)
     qsort(_array_neighbours[i], _num_neighbours[i], sizeof(int), GraphUtils::int_compare);
 }
 
@@ -248,9 +294,9 @@ void DynamicGraph::makeArrayNeighbours() {
   int i,j;
   vector<int>:: iterator ii;
   _array_neighbours = new int*[_num_nodes];  
-  for (i=0; i<_num_nodes; i++) {
+  for (i = 0; i < _num_nodes; i++) {
     _array_neighbours[i] = new int[_neighbours[i].size()];
-    for (ii=_neighbours[i].begin(), j=0; ii!=_neighbours[i].end(); ++ii, j++)
+    for (ii = _neighbours[i].begin(), j = 0; ii != _neighbours[i].end(); ii++, j++)
       _array_neighbours[i][j] = *ii;
     _neighbours[i].clear();
   }
@@ -260,13 +306,14 @@ void DynamicGraph::makeVectorNeighbours() {
   int i,j;
   vector<int>:: iterator ii;
 
-  for (i=0; i<_num_nodes; i++)
-    for (j=0; j<_num_neighbours[i]; j++)
+  for (i = 0; i < _num_nodes; i++)
+    for (j = 0; j < _num_neighbours[i]; j++)
       _neighbours[i].push_back(_array_neighbours[i][j]);
 
   if (_array_neighbours!=NULL) {
-    for (i=0; i<_num_nodes; i++)
-      if (_array_neighbours[i]!=NULL) delete[] _array_neighbours[i];
+    for (i = 0; i < _num_nodes; i++)
+      if (_array_neighbours[i] != NULL)
+        delete[] _array_neighbours[i];
     delete[] _array_neighbours;
   }
 }

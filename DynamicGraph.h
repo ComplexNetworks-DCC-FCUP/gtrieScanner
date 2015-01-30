@@ -32,11 +32,13 @@ class DynamicGraph : public Graph {
 
   int _num_nodes;
   int _num_edges;
+  int _sqrt_nodes;
+  int _log_nodes;
 
   int *_in;
   int *_out;
   int *_num_neighbours;
-  int *cache;
+  int **cache;
 
   bool **_adjM;
   int  **_array_neighbours;
@@ -44,8 +46,8 @@ class DynamicGraph : public Graph {
   vector<int> *_adjIn;
   vector<int> *_neighbours;
 
-  list<int> **_hashM;
-  int _sqrt_nodes;
+  struct l_list;
+  l_list ***_hashM;
   
   void _init();
   void _delete();
