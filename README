@@ -132,6 +132,7 @@ Possible Options
 List of graph representation type codes (from flag '-tp'):
   0: Standard Adjacency Matrix;
   1: Adjacency List with Binary Search;
-  2: Hash Table per line of Adjacency Matrix;
+  2: Hash Table per line of Adjacency Matrix + Cache per node;
+  3: Trie of digits per node;
    
 ----------------------------------------------------

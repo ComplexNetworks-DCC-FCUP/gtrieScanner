@@ -22,6 +22,9 @@ Last Update: 11/02/2012
 #include <stdio.h>
 #include <algorithm>
 
+#define TRIE_MOD 15
+#define TRIE_ORD 4
+
 #ifdef PRINT_CALLS
 FILE* fn;
 #endif
@@ -30,6 +33,35 @@ struct DynamicGraph::l_list {
   int value;
   l_list* next;
 };
+
+struct DynamicGraph::a_trie {
+  bool end;
+  a_trie* childs[TRIE_MOD + 1];
+};
+
+DynamicGraph::a_trie* DynamicGraph::new_trie() {
+  a_trie* tmp = new a_trie();
+  int i;
+  
+  tmp->end = false;
+  for (i = 0; i <= TRIE_MOD; i++) {
+    tmp->childs[i] = NULL;
+  }
+
+  return tmp;
+}
+
+void DynamicGraph::delete_trie(a_trie* cur) {
+  if (cur == NULL)
+    return;
+
+  int i;
+  for (i = 0; i <= TRIE_MOD; i++) {
+    delete_trie(cur->childs[i]);
+    if (cur->childs[i] != NULL)
+      delete cur->childs[i];
+  }
+}
 
 DynamicGraph::DynamicGraph(RepType _r) {
   #ifdef PRINT_CALLS
@@ -57,6 +89,7 @@ void DynamicGraph::_init() {
   _adjIn            = NULL;
   _neighbours       = NULL;
   cache             = NULL;
+  trie              = NULL;
   _hashM            = NULL;
   _in               = NULL;
   _out              = NULL;
@@ -103,6 +136,13 @@ void DynamicGraph::_delete() {
   if (_in != NULL) delete[] _in;
   if (_out != NULL) delete[] _out;
   if (_out != NULL) delete[] _num_neighbours;
+  if (trie != NULL) {
+    for (i = 0; i < _num_nodes; i++) {
+      delete_trie(trie[i]);
+      delete trie[i];
+    }
+    delete[] trie;
+  }
 
   if (_array_neighbours != NULL) {
     for (i = 0; i < _num_nodes; i++)
@@ -139,13 +179,19 @@ void DynamicGraph::createGraph(int n, GraphType t) {
   
   int i;
   _num_nodes = n;
-  _sqrt_nodes = (int)sqrt(n) + 1;
   _type = t;
+  
   int tmp_log = (int)log2((double) n);
   _log_nodes = 1;
   while (_log_nodes < tmp_log)
     _log_nodes *= 2;
   _log_nodes--;
+
+  tmp_log = (int)sqrt(n) + 1;
+  _sqrt_nodes = 1;
+  while (_sqrt_nodes < tmp_log)
+    _sqrt_nodes *= 2;
+  _sqrt_nodes--;
 
   if (_rtype == MATRIX) {
     _adjM = new bool*[n];  
@@ -183,9 +229,9 @@ void DynamicGraph::prepareGraph() {
 
     int i, j;
     for (i = 0; i < _num_nodes; i++) {
-      _hashM[i] = new l_list*[_sqrt_nodes];
+      _hashM[i] = new l_list*[_sqrt_nodes + 1];
 
-      for (j = 0; j < _sqrt_nodes; j++)
+      for (j = 0; j <= _sqrt_nodes; j++)
         _hashM[i][j] = NULL;
     }
 
@@ -193,8 +239,29 @@ void DynamicGraph::prepareGraph() {
       for (j = 0; j < _out[i]; j++) {
         l_list* n_node = new l_list();
         n_node->value = _adjOut[i][j];
-        n_node->next = _hashM[i][_adjOut[i][j] % _sqrt_nodes];
-        _hashM[i][_adjOut[i][j] % _sqrt_nodes] = n_node;
+        n_node->next = _hashM[i][_adjOut[i][j] & _sqrt_nodes];
+        _hashM[i][_adjOut[i][j] & _sqrt_nodes] = n_node;
+      }
+    }
+  }
+  else if (_rtype == TRIE) {
+    int i, j;
+    trie = new a_trie*[_num_nodes];
+    
+    for (i = 0; i < _num_nodes; i++) {
+      trie[i] = new_trie();
+
+      for (j = 0; j < _out[i]; j++) {
+        int num = _adjOut[i][j];
+        a_trie* cur = trie[i];
+        
+        while (num) {
+          if (cur->childs[num & TRIE_MOD] == NULL)
+            cur->childs[num & TRIE_MOD] = new_trie();
+          cur = cur->childs[num & TRIE_MOD];
+          num >>= TRIE_ORD;
+        }
+        cur->end = true;
       }
     }
   }
@@ -263,7 +330,7 @@ bool DynamicGraph::hasEdge(int a, int b) {
     if (cache[a][b & _log_nodes] == b)
       return true;
 
-    l_list* cur = _hashM[a][b % _sqrt_nodes];
+    l_list* cur = _hashM[a][b & _sqrt_nodes];
     while (cur != NULL) {
       if (cur->value == b) {
         cache[a][b & _log_nodes] = b;
@@ -273,6 +340,16 @@ bool DynamicGraph::hasEdge(int a, int b) {
       cur = cur->next;
     }
     return false;
+  }
+  else if (_rtype == TRIE) {
+    a_trie* cur = trie[a];
+
+    while (cur != NULL && b) {
+      cur = cur->childs[b & TRIE_MOD];
+      b >>= TRIE_ORD;
+    }
+
+    return cur != NULL && cur->end;
   }
 
   return false;

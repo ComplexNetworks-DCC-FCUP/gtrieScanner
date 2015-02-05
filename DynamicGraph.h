@@ -24,7 +24,7 @@ Last Update: 27/09/2014
 #include "Graph.h"
 #include <math.h>
 
-typedef enum{MATRIX, BSLIST, HASH} RepType;
+typedef enum{MATRIX, BSLIST, HASH, TRIE} RepType;
 
 class DynamicGraph : public Graph {
  private:
@@ -48,6 +48,12 @@ class DynamicGraph : public Graph {
 
   struct l_list;
   l_list ***_hashM;
+
+  struct a_trie;
+  a_trie **trie;
+
+  a_trie* new_trie();
+  void delete_trie(a_trie* cur);
   
   void _init();
   void _delete();
