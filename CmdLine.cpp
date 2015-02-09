@@ -218,6 +218,8 @@ void CmdLine::compute_original() {
     printf("Graph Type: Hash Table of Adjacency Matrix\n");
   else if (graph_type == TRIE)
     printf("Graph Type: Trie of Digits\n");
+  else if (graph_type == INTER)
+    printf("Graph Type: Adjacency List + Interpolation Search\n");
 
   // Compute frequency
   Global::show_occ = occurrences;
@@ -614,6 +616,9 @@ void CmdLine::parse_cmdargs(int argc, char **argv) {
           break;
         case 3:
           graph_type = TRIE;
+          break;
+        case 4:
+          graph_type = INTER;
           break;
         default:
           graph_type = MATRIX;

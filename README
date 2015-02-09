@@ -134,5 +134,6 @@ List of graph representation type codes (from flag '-tp'):
   1: Adjacency List with Binary Search;
   2: Hash Table per line of Adjacency Matrix + Cache per node;
   3: Trie of digits per node;
-   
+  4: Adjacency List with Interpolation Search;
+
 ----------------------------------------------------

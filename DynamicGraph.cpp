@@ -224,7 +224,7 @@ void DynamicGraph::prepareGraph() {
       sort(_adjIn[i].begin(), _adjIn[i].end());
     }
   }
-  else if (_rtype == HASH) {
+  else if (_rtype == HASH || _rtype == INTER) {
     _hashM = new l_list**[_num_nodes];
 
     int i, j;
@@ -350,6 +350,25 @@ bool DynamicGraph::hasEdge(int a, int b) {
     }
 
     return cur != NULL && cur->end;
+  }
+  else if (_rtype == INTER) {
+    int lo = 0, hi = _out[a] - 1, med, vl;
+    if (hi < 0 || b < _adjOut[a][0] || b > _adjOut[a][hi])
+      return false;
+    
+    while (_adjOut[a][lo] <= b && _adjOut[a][hi] >= b) {
+      med = (lo == hi) ? lo : lo + ((b - _adjOut[a][lo]) * (hi - lo)) / (_adjOut[a][hi] - _adjOut[a][lo]);
+      vl = _adjOut[a][med];
+      
+      if (vl < b)
+        lo = med + 1;
+      else if (vl > b)
+        hi = med - 1;
+      else if (vl == b)
+        return true;
+    }
+
+    return false;
   }
 
   return false;
