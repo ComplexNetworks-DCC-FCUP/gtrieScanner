@@ -37,6 +37,8 @@ class DynamicGraph : public Graph {
 
   int *_in;
   int *_out;
+  int *_minL;
+  int *_maxL;
   int *_num_neighbours;
   int **cache;
 

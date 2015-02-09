@@ -93,6 +93,8 @@ void DynamicGraph::_init() {
   _hashM            = NULL;
   _in               = NULL;
   _out              = NULL;
+  _maxL             = NULL;
+  _minL             = NULL;
   _num_neighbours   = NULL;
   _array_neighbours = NULL;
 }
@@ -133,9 +135,12 @@ void DynamicGraph::_delete() {
       delete[] cache[i];
     delete[] cache;
   }
+
   if (_in != NULL) delete[] _in;
   if (_out != NULL) delete[] _out;
   if (_out != NULL) delete[] _num_neighbours;
+  if (_maxL != NULL) delete[] _maxL;
+  if (_minL != NULL) delete[] _minL;
   if (trie != NULL) {
     for (i = 0; i < _num_nodes; i++) {
       delete_trie(trie[i]);
@@ -215,15 +220,22 @@ void DynamicGraph::createGraph(int n, GraphType t) {
 
 void DynamicGraph::prepareGraph() {
   ready = true;
+
+  _maxL = new int[_num_nodes];
+  _minL = new int[_num_nodes];
+  int i, j;
+  for (i = 0; i < _num_nodes; i++) {
+    sort(_adjOut[i].begin(), _adjOut[i].end());
+    sort(_adjIn[i].begin(), _adjIn[i].end());
+
+    _maxL[i] = _adjOut[i][_out[i] - 1];
+    _minL[i] = _adjOut[i][0];
+  }
+  
   if (_rtype == MATRIX)
     return;
-  else if (_rtype == BSLIST) {
-    int i;
-    for (i = 0; i < _num_nodes; i++) {
-      sort(_adjOut[i].begin(), _adjOut[i].end());
-      sort(_adjIn[i].begin(), _adjIn[i].end());
-    }
-  }
+  else if (_rtype == BSLIST)
+    return;
   else if (_rtype == HASH || _rtype == INTER) {
     _hashM = new l_list**[_num_nodes];
 
@@ -304,6 +316,9 @@ bool DynamicGraph::hasEdge(int a, int b) {
         return true;
     return false;
   }
+
+//  if (b < _minL[a] || b > _maxL[a])
+//      return false;
 
   if (_rtype == MATRIX)
     return _adjM[a][b];
