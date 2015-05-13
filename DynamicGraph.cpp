@@ -228,15 +228,20 @@ void DynamicGraph::prepareGraph() {
     sort(_adjOut[i].begin(), _adjOut[i].end());
     sort(_adjIn[i].begin(), _adjIn[i].end());
 
-    _maxL[i] = _adjOut[i][_out[i] - 1];
-    _minL[i] = _adjOut[i][0];
+    _maxL[i] = _minL[i] = -1;
+
+    if (_out[i])
+    {
+      _maxL[i] = _adjOut[i][_out[i] - 1];
+      _minL[i] = _adjOut[i][0];
+    }
   }
   
-  if (_rtype == MATRIX)
+  if (_rtype == MATRIX || _rtype == LINEAR)
     return;
-  else if (_rtype == BSLIST)
+  else if (_rtype == BSLIST || _rtype == INTER)
     return;
-  else if (_rtype == HASH || _rtype == INTER) {
+  else if (_rtype == HASH) {
     _hashM = new l_list**[_num_nodes];
 
     int i, j;
@@ -317,11 +322,19 @@ bool DynamicGraph::hasEdge(int a, int b) {
     return false;
   }
 
-//  if (b < _minL[a] || b > _maxL[a])
-//      return false;
+  if (b < _minL[a] || b > _maxL[a])
+      return false;
 
   if (_rtype == MATRIX)
     return _adjM[a][b];
+  else if (_rtype == LINEAR) {
+    int i;
+    for (i = 0; i < _out[a]; i++)
+      if (_adjOut[a][i] == b)
+        return true;
+
+    return false;
+  }
   else if (_rtype == BSLIST) {
     int lo = 0, hi = _out[a] - 1, med, vl;
     if (hi < 0)
