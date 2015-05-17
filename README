@@ -128,14 +128,17 @@ Possible Options
  - [-tp <int>] or [--graphtype <int>]
    Graph representation type (See detail list of types below). (default is 0)
 
+ - [-ch] or [--cache]
+   Uses cache in graph representation method (only works with hash, trie or hybrid methods). (default is false)
+
 
 List of graph representation type codes (from flag '-tp'):
   0: Standard Adjacency Matrix;
   1: Adjacency List with Binary Search;
-  2: Hash Table per line of Adjacency Matrix + Cache per node;
+  2: Hash Table per line of Adjacency Matrix;
   3: Trie of digits per node;
   4: Adjacency List with Interpolation Search;
   5: Adjacency List with Linear Search
-  6: Hybrid: Trie + Hash (cache needs work);
+  6: Hybrid: Trie + Hash;
 
 ----------------------------------------------------
