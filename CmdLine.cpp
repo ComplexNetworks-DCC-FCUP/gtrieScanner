@@ -222,6 +222,9 @@ void CmdLine::compute_original() {
     printf("Graph Type: Adjacency List + Interpolation Search\n");
   else if (graph_type == LINEAR)
     printf("Graph Type: Linear Search on Adjacency List\n");
+  else if (graph_type == HYBRID)
+    printf("Graph Type: Hybrid: Trie + Hash\n");
+
 
   // Compute frequency
   Global::show_occ = occurrences;
@@ -624,6 +627,9 @@ void CmdLine::parse_cmdargs(int argc, char **argv) {
           break;
         case 5:
           graph_type = LINEAR;
+          break;
+        case 6:
+          graph_type = HYBRID;
           break;
         default:
           graph_type = MATRIX;

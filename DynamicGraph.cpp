@@ -24,6 +24,7 @@ Last Update: 11/02/2012
 
 #define TRIE_MOD 15
 #define TRIE_ORD 4
+#define HYBRID_NUMBER 22
 
 #ifdef PRINT_CALLS
 FILE* fn;
@@ -239,9 +240,9 @@ void DynamicGraph::prepareGraph() {
   
   if (_rtype == MATRIX || _rtype == LINEAR)
     return;
-  else if (_rtype == BSLIST || _rtype == INTER)
+  if (_rtype == BSLIST || _rtype == INTER)
     return;
-  else if (_rtype == HASH) {
+  if (_rtype == HASH || _rtype == HYBRID) {
     _hashM = new l_list**[_num_nodes];
 
     int i, j;
@@ -261,7 +262,7 @@ void DynamicGraph::prepareGraph() {
       }
     }
   }
-  else if (_rtype == TRIE) {
+  if (_rtype == TRIE || _rtype == HYBRID) {
     int i, j;
     trie = new a_trie*[_num_nodes];
     
@@ -322,8 +323,8 @@ bool DynamicGraph::hasEdge(int a, int b) {
     return false;
   }
 
-  if (b < _minL[a] || b > _maxL[a])
-      return false;
+//  if (b < _minL[a] || b > _maxL[a])
+//      return false;
 
   if (_rtype == MATRIX)
     return _adjM[a][b];
@@ -354,7 +355,7 @@ bool DynamicGraph::hasEdge(int a, int b) {
 
     return false;
   }
-  else if (_rtype == HASH) {
+  else if (_rtype == HASH || (_rtype == HYBRID && _out[a] <= HYBRID_NUMBER)) {
     if (cache[a][b & _log_nodes] == b)
       return true;
 
@@ -369,7 +370,7 @@ bool DynamicGraph::hasEdge(int a, int b) {
     }
     return false;
   }
-  else if (_rtype == TRIE) {
+  else if (_rtype == TRIE || _rtype == HYBRID) {
     a_trie* cur = trie[a];
 
     while (cur != NULL && b) {
