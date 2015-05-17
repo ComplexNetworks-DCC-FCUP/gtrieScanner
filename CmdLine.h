@@ -55,6 +55,7 @@ class CmdLine {
   static FormatType format;
   static OutputType output;
   static RepType graph_type;
+  static bool cache_status;
   static Graph *g;
 
   static FILE *f_output;

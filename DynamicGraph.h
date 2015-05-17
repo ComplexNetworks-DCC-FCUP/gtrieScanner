@@ -29,6 +29,7 @@ typedef enum{MATRIX, BSLIST, HASH, TRIE, INTER, LINEAR, HYBRID} RepType;
 class DynamicGraph : public Graph {
  private:
   GraphType _type;
+  bool _cstatus;
 
   int _num_nodes;
   int _num_edges;
@@ -63,6 +64,7 @@ class DynamicGraph : public Graph {
  public:
   DynamicGraph();
   DynamicGraph(RepType _r);
+  DynamicGraph(RepType _r, bool _cs);
   ~DynamicGraph();
 
   RepType _rtype;

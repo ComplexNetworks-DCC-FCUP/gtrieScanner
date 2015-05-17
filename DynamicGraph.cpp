@@ -69,6 +69,17 @@ DynamicGraph::DynamicGraph(RepType _r) {
   fn = fopen("hasEdgeCalls.txt", "w");
   #endif
 
+  _cstatus = false;
+  _rtype = _r;
+  _init();
+}
+
+DynamicGraph::DynamicGraph(RepType _r, bool _cs) {
+  #ifdef PRINT_CALLS
+  fn = fopen("hasEdgeCalls.txt", "w");
+  #endif
+
+  _cstatus = _cs;
   _rtype = _r;
   _init();
 }
@@ -169,8 +180,10 @@ void DynamicGraph::zero() {
     _in[i] = 0;
     _out[i] = 0;
     _num_neighbours[i] = 0;
-    for (j = 0; j <= _log_nodes; j++)
-      cache[i][j] = -1;
+
+    if (_cstatus)
+      for (j = 0; j <= _log_nodes; j++)
+        cache[i][j] = -1;
     _adjIn[i].clear();
     _adjOut[i].clear();
     _neighbours[i].clear();
@@ -209,9 +222,12 @@ void DynamicGraph::createGraph(int n, GraphType t) {
   _adjOut     = new vector<int>[n];
   _neighbours = new vector<int>[n];
 
-  cache           = new int*[n];
-  for (i = 0; i < n; i++)
-    cache[i] = new int[_log_nodes + 1];
+  if (_cstatus) {
+    cache           = new int*[n];
+    for (i = 0; i < n; i++)
+      cache[i] = new int[_log_nodes + 1];
+  }
+
   _in             = new int[n];
   _out            = new int[n];
   _num_neighbours = new int[n];
@@ -323,6 +339,9 @@ bool DynamicGraph::hasEdge(int a, int b) {
     return false;
   }
 
+  if (_cstatus && cache[a][b & _log_nodes] == b)
+    return true;
+
 //  if (b < _minL[a] || b > _maxL[a])
 //      return false;
 
@@ -356,13 +375,11 @@ bool DynamicGraph::hasEdge(int a, int b) {
     return false;
   }
   else if (_rtype == HASH || (_rtype == HYBRID && _out[a] <= HYBRID_NUMBER)) {
-    if (cache[a][b & _log_nodes] == b)
-      return true;
-
     l_list* cur = _hashM[a][b & _sqrt_nodes];
     while (cur != NULL) {
       if (cur->value == b) {
-        cache[a][b & _log_nodes] = b;
+        if (_cstatus)
+          cache[a][b & _log_nodes] = b;
         return true;
       }
 
@@ -377,6 +394,9 @@ bool DynamicGraph::hasEdge(int a, int b) {
       cur = cur->childs[b & TRIE_MOD];
       b >>= TRIE_ORD;
     }
+
+    if (_cstatus && cur != NULL && cur->end)
+      cache[a][b & _log_nodes] = b;
 
     return cur != NULL && cur->end;
   }
