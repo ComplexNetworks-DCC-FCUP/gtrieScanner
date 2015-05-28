@@ -25,6 +25,7 @@ Last Update: 11/02/2012
 #define TRIE_MOD 15
 #define TRIE_ORD 4
 #define HYBRID_NUMBER 22
+#define HYBRID_NUMBER2 3
 
 #ifdef PRINT_CALLS
 FILE* fn;
@@ -153,6 +154,7 @@ void DynamicGraph::_delete() {
   if (_out != NULL) delete[] _num_neighbours;
   if (_maxL != NULL) delete[] _maxL;
   if (_minL != NULL) delete[] _minL;
+  if (hybrid_ch != NULL) delete[] hybrid_ch;
   if (trie != NULL) {
     for (i = 0; i < _num_nodes; i++) {
       delete_trie(trie[i]);
@@ -180,6 +182,7 @@ void DynamicGraph::zero() {
     _in[i] = 0;
     _out[i] = 0;
     _num_neighbours[i] = 0;
+    hybrid_ch[i] = 0;
 
     if (_cstatus)
       for (j = 0; j <= _log_nodes; j++)
@@ -227,6 +230,8 @@ void DynamicGraph::createGraph(int n, GraphType t) {
     for (i = 0; i < n; i++)
       cache[i] = new int[_log_nodes + 1];
   }
+
+  hybrid_ch = new int[n];
 
   _in             = new int[n];
   _out            = new int[n];
@@ -297,6 +302,13 @@ void DynamicGraph::prepareGraph() {
         }
         cur->end = true;
       }
+
+      int total = 0;
+      for (j = 0; j < _out[i]; j++)
+        total += 1 + (int)log10(_adjOut[i][j]);
+
+//      hybrid_ch[i] = (_maxL[i] >= HYBRID_NUMBER2);
+      hybrid_ch[i] = 0 * !(((total / _out[i]) <= 2) || (_out[i] > 120));
     }
   }
 }
@@ -374,7 +386,8 @@ bool DynamicGraph::hasEdge(int a, int b) {
 
     return false;
   }
-  else if (_rtype == HASH || (_rtype == HYBRID && _out[a] <= HYBRID_NUMBER)) {
+//  else if (_rtype == HASH || (_rtype == HYBRID && _out[a] <= HYBRID_NUMBER)) {
+  else if (_rtype == HASH || (_rtype == HYBRID && hybrid_ch[a])) {
     l_list* cur = _hashM[a][b & _sqrt_nodes];
     while (cur != NULL) {
       if (cur->value == b) {
