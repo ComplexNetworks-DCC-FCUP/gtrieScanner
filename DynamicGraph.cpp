@@ -209,11 +209,12 @@ void DynamicGraph::createGraph(int n, GraphType t) {
     _log_nodes *= 2;
   _log_nodes--;
 
-  tmp_log = (int)sqrt(n) + 1;
+/*  tmp_log = (int)sqrt(n) + 1;
   _sqrt_nodes = 1;
   while (_sqrt_nodes < tmp_log)
     _sqrt_nodes *= 2;
   _sqrt_nodes--;
+*/
 
   if (_rtype == MATRIX) {
     _adjM = new bool*[n];  
@@ -246,11 +247,13 @@ void DynamicGraph::prepareGraph() {
   _maxL = new int[_num_nodes];
   _minL = new int[_num_nodes];
   int i, j;
+  long long int total = 0;
   for (i = 0; i < _num_nodes; i++) {
     sort(_adjOut[i].begin(), _adjOut[i].end());
     sort(_adjIn[i].begin(), _adjIn[i].end());
 
     _maxL[i] = _minL[i] = -1;
+    total += _out[i];
 
     if (_out[i])
     {
@@ -258,6 +261,12 @@ void DynamicGraph::prepareGraph() {
       _minL[i] = _adjOut[i][0];
     }
   }
+
+  int tmp_log = total / _num_nodes;
+  _sqrt_nodes = 1;
+  while (_sqrt_nodes < tmp_log)
+    _sqrt_nodes *= 2;
+  _sqrt_nodes--;
   
   if (_rtype == MATRIX || _rtype == LINEAR)
     return;
@@ -303,12 +312,12 @@ void DynamicGraph::prepareGraph() {
         cur->end = true;
       }
 
-      int total = 0;
+      long long int total = 0;
       for (j = 0; j < _out[i]; j++)
         total += 1 + (int)log10(_adjOut[i][j]);
 
 //      hybrid_ch[i] = (_maxL[i] >= HYBRID_NUMBER2);
-      hybrid_ch[i] = 0 * !(((total / _out[i]) <= 2) || (_out[i] > 120));
+      hybrid_ch[i] = !(_out[i] > (1 + total / (1 + _out[i])) * _sqrt_nodes);
     }
   }
 }
