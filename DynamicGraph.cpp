@@ -22,10 +22,8 @@ Last Update: 11/02/2012
 #include <stdio.h>
 #include <algorithm>
 
-#define TRIE_MOD 15
-#define TRIE_ORD 4
-#define HYBRID_NUMBER 22
-#define HYBRID_NUMBER2 3
+#define TRIE_MOD 31
+#define TRIE_ORD 5
 
 #ifdef PRINT_CALLS
 FILE* fn;
@@ -203,12 +201,6 @@ void DynamicGraph::_deleteAux() {
     }
     delete[] _hashM;
   }
-    
-  if (cache != NULL) {
-    for (i = 0; i < _num_nodes; i++)
-      delete[] cache[i];
-    delete[] cache;
-  }
 
   if (_maxL != NULL) delete[] _maxL;
   if (_minL != NULL) delete[] _minL;
@@ -257,7 +249,7 @@ void DynamicGraph::createGraph(int n, GraphType t) {
   _num_nodes = n;
   _type = t;
   
-  int tmp_log = (int)log2((double) n);
+  int tmp_log = 4 * (int)log2((double) n);
   _log_nodes = 1;
   while (_log_nodes < tmp_log)
     _log_nodes *= 2;
@@ -323,7 +315,6 @@ void DynamicGraph::prepareGraph() {
     _sqrt_nodes *= 2;
   _sqrt_nodes--;
 
-
   for (i = 0; i < _num_nodes; i++) {
     long long int total = 0;
     for (j = 0; j < _out[i]; j++)
@@ -332,14 +323,16 @@ void DynamicGraph::prepareGraph() {
     hybrid_ch[i] = 1;
 //    hybrid_ch[i] = (_maxL[i] >= HYBRID_NUMBER2);
     if (_out[i])
-      hybrid_ch[i] = !(_out[i] > (total / (_out[i])) * _sqrt_nodes);
+      hybrid_ch[i] = !(_out[i] > (total / _out[i]) * _sqrt_nodes);
   }
 
   
   if (_rtype == MATRIX || _rtype == LINEAR)
     return;
+
   if (_rtype == BSLIST || _rtype == INTER)
     return;
+
   if (_rtype == HASH || _rtype == HYBRID) {
     _hashM = new l_list**[_num_nodes];
 
@@ -509,8 +502,14 @@ bool DynamicGraph::hasEdge(int a, int b) {
       b >>= TRIE_ORD;
     }
 
-    if (_cstatus && cur != NULL && cur->end)
-      cache[a][b & _log_nodes] = b;
+    /*if (_cstatus) {
+      if (cur != NULL && cur->end) {
+        cache[a][b & _log_nodes] = b;
+        return true;
+      }
+
+      return false;
+    }*/
 
     return cur != NULL && cur->end;
   }
