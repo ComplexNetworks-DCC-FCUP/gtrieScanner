@@ -58,9 +58,12 @@ class DynamicGraph : public Graph {
 
   a_trie* new_trie();
   void delete_trie(a_trie* cur);
+
+  void _removeVector(vector<int> &v, int b);
   
   void _init();
   void _delete();
+  void _deleteAux();
 
  public:
   DynamicGraph();

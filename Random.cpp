@@ -42,7 +42,7 @@ void Random::markovChainPerEdge(Graph *g, int num, int tries) {
   vector<int> *v, *u;
   vector<int>:: iterator ii;
 
-  /*a=b=c=d=0;
+  a=b=c=d=0;
   for (n=0; n<num; n++)
     for (i=0; i<nodes; i++) {
       v = g->outEdges(i);
@@ -71,7 +71,9 @@ void Random::markovChainPerEdge(Graph *g, int num, int tries) {
 	  }
 	}
       }
-    }*/
+    }
+
+  g->prepareGraph();
 }
 
 

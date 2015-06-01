@@ -103,6 +103,7 @@ void DynamicGraph::_init() {
   _neighbours       = NULL;
   cache             = NULL;
   trie              = NULL;
+  hybrid_ch         = NULL;
   _hashM            = NULL;
   _in               = NULL;
   _out              = NULL;
@@ -129,6 +130,9 @@ void DynamicGraph::_delete() {
   if (_hashM != NULL) {
     int j;
     for (i = 0; i < _num_nodes; i++) {
+      if (_rtype == HYBRID && !hybrid_ch[i])
+        continue;
+
       for (j = 0; j < _sqrt_nodes; j++) {
         l_list* cur = _hashM[i][j], *prev;
         while (cur != NULL) {
@@ -151,17 +155,21 @@ void DynamicGraph::_delete() {
 
   if (_in != NULL) delete[] _in;
   if (_out != NULL) delete[] _out;
-  if (_out != NULL) delete[] _num_neighbours;
+  if (_num_neighbours != NULL) delete[] _num_neighbours;
   if (_maxL != NULL) delete[] _maxL;
   if (_minL != NULL) delete[] _minL;
-  if (hybrid_ch != NULL) delete[] hybrid_ch;
   if (trie != NULL) {
     for (i = 0; i < _num_nodes; i++) {
+      if (_rtype == HYBRID && hybrid_ch[i])
+        continue;
+
       delete_trie(trie[i]);
       delete trie[i];
     }
     delete[] trie;
   }
+
+  if (hybrid_ch != NULL) delete[] hybrid_ch;
 
   if (_array_neighbours != NULL) {
     for (i = 0; i < _num_nodes; i++)
@@ -169,6 +177,53 @@ void DynamicGraph::_delete() {
         delete[] _array_neighbours[i];
     delete[] _array_neighbours;
   }
+
+  ready = false;
+}
+
+void DynamicGraph::_deleteAux() {
+  int i;
+
+  if (_hashM != NULL) {
+    int j;
+    for (i = 0; i < _num_nodes; i++) {
+      if (_rtype == HYBRID && !hybrid_ch[i])
+        continue;
+
+      for (j = 0; j < _sqrt_nodes; j++) {
+        l_list* cur = _hashM[i][j], *prev;
+        while (cur != NULL) {
+          prev = cur;
+          cur = cur->next;
+          delete prev;
+        }
+      }
+
+      delete[] _hashM[i];
+    }
+    delete[] _hashM;
+  }
+    
+  if (cache != NULL) {
+    for (i = 0; i < _num_nodes; i++)
+      delete[] cache[i];
+    delete[] cache;
+  }
+
+  if (_maxL != NULL) delete[] _maxL;
+  if (_minL != NULL) delete[] _minL;
+  if (trie != NULL) {
+    for (i = 0; i < _num_nodes; i++) {
+      if (_rtype == HYBRID && hybrid_ch[i])
+        continue;
+
+      delete_trie(trie[i]);
+      delete trie[i];
+    }
+    delete[] trie;
+  }
+
+  if (hybrid_ch != NULL) delete[] hybrid_ch;
 
   ready = false;
 }
@@ -182,7 +237,6 @@ void DynamicGraph::zero() {
     _in[i] = 0;
     _out[i] = 0;
     _num_neighbours[i] = 0;
-    hybrid_ch[i] = 0;
 
     if (_cstatus)
       for (j = 0; j <= _log_nodes; j++)
@@ -232,8 +286,6 @@ void DynamicGraph::createGraph(int n, GraphType t) {
       cache[i] = new int[_log_nodes + 1];
   }
 
-  hybrid_ch = new int[n];
-
   _in             = new int[n];
   _out            = new int[n];
   _num_neighbours = new int[n];
@@ -242,10 +294,13 @@ void DynamicGraph::createGraph(int n, GraphType t) {
 }
 
 void DynamicGraph::prepareGraph() {
+  _deleteAux();
   ready = true;
 
   _maxL = new int[_num_nodes];
   _minL = new int[_num_nodes];
+  hybrid_ch = new int[_num_nodes];
+
   int i, j;
   long long int total = 0;
   for (i = 0; i < _num_nodes; i++) {
@@ -262,11 +317,24 @@ void DynamicGraph::prepareGraph() {
     }
   }
 
-  int tmp_log = total / _num_nodes;
+  int tmp_log = 2 * total / _num_nodes;
   _sqrt_nodes = 1;
   while (_sqrt_nodes < tmp_log)
     _sqrt_nodes *= 2;
   _sqrt_nodes--;
+
+
+  for (i = 0; i < _num_nodes; i++) {
+    long long int total = 0;
+    for (j = 0; j < _out[i]; j++)
+      total += 1 + (int)log10(_adjOut[i][j]);
+
+    hybrid_ch[i] = 1;
+//    hybrid_ch[i] = (_maxL[i] >= HYBRID_NUMBER2);
+    if (_out[i])
+      hybrid_ch[i] = !(_out[i] > (total / (_out[i])) * _sqrt_nodes);
+  }
+
   
   if (_rtype == MATRIX || _rtype == LINEAR)
     return;
@@ -277,6 +345,9 @@ void DynamicGraph::prepareGraph() {
 
     int i, j;
     for (i = 0; i < _num_nodes; i++) {
+      if (_rtype == HYBRID && !hybrid_ch[i])
+        continue;
+
       _hashM[i] = new l_list*[_sqrt_nodes + 1];
 
       for (j = 0; j <= _sqrt_nodes; j++)
@@ -284,6 +355,9 @@ void DynamicGraph::prepareGraph() {
     }
 
     for (i = 0; i < _num_nodes; i++) {
+      if (_rtype == HYBRID && !hybrid_ch[i])
+        continue;
+
       for (j = 0; j < _out[i]; j++) {
         l_list* n_node = new l_list();
         n_node->value = _adjOut[i][j];
@@ -292,11 +366,15 @@ void DynamicGraph::prepareGraph() {
       }
     }
   }
+
   if (_rtype == TRIE || _rtype == HYBRID) {
     int i, j;
     trie = new a_trie*[_num_nodes];
     
     for (i = 0; i < _num_nodes; i++) {
+      if (_rtype == HYBRID && hybrid_ch[i])
+        continue;
+
       trie[i] = new_trie();
 
       for (j = 0; j < _out[i]; j++) {
@@ -311,13 +389,6 @@ void DynamicGraph::prepareGraph() {
         }
         cur->end = true;
       }
-
-      long long int total = 0;
-      for (j = 0; j < _out[i]; j++)
-        total += 1 + (int)log10(_adjOut[i][j]);
-
-//      hybrid_ch[i] = (_maxL[i] >= HYBRID_NUMBER2);
-      hybrid_ch[i] = !(_out[i] > (1 + total / (1 + _out[i])) * _sqrt_nodes);
     }
   }
 }
@@ -344,7 +415,28 @@ void DynamicGraph::addEdge(int a, int b) {
 }
 
 void DynamicGraph::rmEdge(int a, int b) {
-  fprintf(stderr, "rmEdge is deprecated for the time being\n");
+//  fprintf(stderr, "rmEdge is deprecated for the time being\n");
+  ready = false;
+
+  if (!hasEdge(a, b)) return;
+
+  if (_rtype == MATRIX)
+    _adjM[a][b] = false;
+
+  _removeVector(_adjOut[a], b);
+  _out[a]--;
+
+  _removeVector(_adjIn[b], a);
+  _in[b]--;
+
+  _num_edges--;
+
+  if (!hasEdge(b, a)) {
+    _removeVector(_neighbours[a], b);
+    _num_neighbours[a]--;
+    _removeVector(_neighbours[b], a);
+    _num_neighbours[b]--;
+  }
 }
 
 bool DynamicGraph::hasEdge(int a, int b) {
@@ -363,12 +455,12 @@ bool DynamicGraph::hasEdge(int a, int b) {
   if (_cstatus && cache[a][b & _log_nodes] == b)
     return true;
 
-//  if (b < _minL[a] || b > _maxL[a])
-//      return false;
+/*  if (b < _minL[a] || b > _maxL[a])
+      return false; */
 
   if (_rtype == MATRIX)
     return _adjM[a][b];
-  else if (_rtype == LINEAR) {
+  else if (_rtype == LINEAR || (_rtype == HYBRID && _out[a] < 3)) {
     int i;
     for (i = 0; i < _out[a]; i++)
       if (_adjOut[a][i] == b)
@@ -443,6 +535,13 @@ bool DynamicGraph::hasEdge(int a, int b) {
   }
 
   return false;
+}
+
+void DynamicGraph::_removeVector(vector<int> &v, int b) {
+  int i, s = v.size();
+  for (i=0; i<s; i++)
+    if (v[i] == b) break;
+  if (i<s) v.erase(v.begin()+i);
 }
 
 void DynamicGraph::sortNeighbours() {
