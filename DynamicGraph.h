@@ -24,7 +24,7 @@ Last Update: 27/09/2014
 #include "Graph.h"
 #include <math.h>
 
-typedef enum{MATRIX, BSLIST, HASH, TRIE, INTER, LINEAR, HYBRID} RepType;
+typedef enum{MATRIX, BSLIST, HASH, TRIE, INTER, LINEAR, HYBRID, HASH2} RepType;
 
 class DynamicGraph : public Graph {
  private:
@@ -38,6 +38,7 @@ class DynamicGraph : public Graph {
 
   int *_in;
   int *_out;
+  int *_hash_out;
   int *_minL;
   int *_maxL;
   int *_num_neighbours;
