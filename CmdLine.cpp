@@ -227,10 +227,12 @@ void CmdLine::compute_original() {
     printf("Graph Type: Hybrid: Trie + Hash\n");
   else if (graph_type == HASH2)
     printf("Graph Type: Hash Table of Adjacency List (2)\n");
+  else if (graph_type == HYBRID2)
+    printf("Graph Type: Hybrid 2: Trie + Hash 2\n");
 
   if (cache_status == true)
     printf("Cache turned on\n");
-  if (cache_status == true && graph_type != HASH && graph_type != TRIE && graph_type != HYBRID)
+  if (cache_status == true && graph_type != HASH && graph_type != HASH2 && graph_type != TRIE && graph_type != HYBRID && graph_type != HYBRID2)
     printf("Warning: Cache only works with hash, trie or hybrid methods\n");
 
 
@@ -647,6 +649,9 @@ void CmdLine::parse_cmdargs(int argc, char **argv) {
           break;
         case 7:
           graph_type = HASH2;
+          break;
+        case 8:
+          graph_type = HYBRID2;
           break;
         default:
           graph_type = MATRIX;

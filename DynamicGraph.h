@@ -24,7 +24,7 @@ Last Update: 27/09/2014
 #include "Graph.h"
 #include <math.h>
 
-typedef enum{MATRIX, BSLIST, HASH, TRIE, INTER, LINEAR, HYBRID, HASH2} RepType;
+typedef enum{MATRIX, BSLIST, HASH, TRIE, INTER, LINEAR, HYBRID, HASH2, HYBRID2} RepType;
 
 class DynamicGraph : public Graph {
  private:
