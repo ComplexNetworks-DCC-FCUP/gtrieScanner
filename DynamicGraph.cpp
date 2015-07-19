@@ -69,6 +69,7 @@ DynamicGraph::DynamicGraph(RepType _r) {
   #endif
 
   _cstatus = false;
+  _bstatus = false;
   _rtype = _r;
   _init();
 }
@@ -79,6 +80,18 @@ DynamicGraph::DynamicGraph(RepType _r, bool _cs) {
   #endif
 
   _cstatus = _cs;
+  _bstatus = false;
+  _rtype = _r;
+  _init();
+}
+
+DynamicGraph::DynamicGraph(RepType _r, bool _cs, bool _bs) {
+  #ifdef PRINT_CALLS
+  fn = fopen("hasEdgeCalls.txt", "w");
+  #endif
+
+  _cstatus = _cs;
+  _bstatus = _bs;
   _rtype = _r;
   _init();
 }
@@ -151,6 +164,9 @@ void DynamicGraph::_delete() {
       delete[] cache[i];
     delete[] cache;
   }
+
+  if (bloom != NULL)
+    delete[] bloom;
 
   if (_in != NULL) delete[] _in;
   if (_out != NULL) delete[] _out;
@@ -230,6 +246,7 @@ void DynamicGraph::_deleteAux() {
   }
 
   if (hybrid_ch != NULL) delete[] hybrid_ch;
+  if (bloom != NULL) delete[] bloom;
 
   ready = false;
 }
@@ -244,6 +261,9 @@ void DynamicGraph::zero() {
     _out[i] = 0;
     _hash_out[i] = 0;
     _num_neighbours[i] = 0;
+
+    if (_bstatus)
+      bloom[i] = 0;
 
     if (_cstatus)
       for (j = 0; j <= _log_nodes; j++)
@@ -287,6 +307,9 @@ void DynamicGraph::createGraph(int n, GraphType t) {
   _adjOut     = new vector<int>[n];
   _neighbours = new vector<int>[n];
 
+  if (_bstatus)
+    bloom = new int[n];
+
   if (_cstatus) {
     cache           = new int*[n];
     for (i = 0; i < n; i++)
@@ -325,6 +348,11 @@ void DynamicGraph::prepareGraph() {
     }
   }
 
+  if (_bstatus)
+    for (i = 0; i < _num_nodes; i++)
+      for (j = 0; j < _out[i]; j++)
+        bloom[i] |= _adjOut[i][j];
+
   int tmp_log = 2 * total / _num_nodes;
   _sqrt_nodes = 1;
   while (_sqrt_nodes < tmp_log)
@@ -352,7 +380,7 @@ void DynamicGraph::prepareGraph() {
       hybrid_ch[i] = 1;
 //    hybrid_ch[i] = (_maxL[i] >= HYBRID_NUMBER2);
       if (_out[i])
-        hybrid_ch[i] = !(_out[i] > (total / _out[i]) * 3);
+        hybrid_ch[i] = !(_out[i] > (total / _out[i]));
     }
   }
   
@@ -509,6 +537,9 @@ bool DynamicGraph::hasEdge(int a, int b) {
 
   if (_cstatus && cache[a][b & _log_nodes] == b)
     return true;
+
+  if (_bstatus && (~bloom[a] & b))
+    return false;
 
 /*  if (b < _minL[a] || b > _maxL[a])
       return false; */

@@ -52,6 +52,7 @@ FormatType CmdLine::format;
 OutputType CmdLine::output;
 RepType CmdLine::graph_type;
 bool CmdLine::cache_status;
+bool CmdLine::bloom_status;
 Graph *CmdLine::g;
 
 FILE *CmdLine::f_output;
@@ -180,7 +181,7 @@ void CmdLine::prepare_graph() {
     Error::msg("No valid graph format specified");
 
   // Read the graph file
-  g = new DynamicGraph(graph_type, cache_status);
+  g = new DynamicGraph(graph_type, cache_status, bloom_status);
 
   // Use simple or simple_weight text format
   if (format == SIMPLE)
@@ -234,6 +235,9 @@ void CmdLine::compute_original() {
     printf("Cache turned on\n");
   if (cache_status == true && graph_type != HASH && graph_type != HASH2 && graph_type != TRIE && graph_type != HYBRID && graph_type != HYBRID2)
     printf("Warning: Cache only works with hash, trie or hybrid methods\n");
+
+  if (bloom_status == true)
+    printf("Bloom filter turned on\n");
 
 
   // Compute frequency
@@ -514,6 +518,7 @@ void CmdLine::defaults() {
   output = TEXT;
   graph_type = MATRIX;
   cache_status = false;
+  bloom_status = false;
   occurrences = false;
 }
 
@@ -623,6 +628,11 @@ void CmdLine::parse_cmdargs(int argc, char **argv) {
     // Use cache on graph representation
     else if (!strcmp("-ch",argv[i]) || !strcmp("--cache", argv[i])) {
       cache_status = true;
+    }
+
+    // Use bloom filter on graph representation
+    else if (!strcmp("-bm",argv[i]) || !strcmp("--bloom", argv[i])) {
+      bloom_status = true;
     }
 
     // Type of graph representation

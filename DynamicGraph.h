@@ -30,6 +30,7 @@ class DynamicGraph : public Graph {
  private:
   GraphType _type;
   bool _cstatus;
+  bool _bstatus;
 
   int _num_nodes;
   int _num_edges;
@@ -44,6 +45,7 @@ class DynamicGraph : public Graph {
   int *_num_neighbours;
   int **cache;
   int *hybrid_ch;
+  int *bloom;
 
   bool **_adjM;
   int  **_array_neighbours;
@@ -70,6 +72,7 @@ class DynamicGraph : public Graph {
   DynamicGraph();
   DynamicGraph(RepType _r);
   DynamicGraph(RepType _r, bool _cs);
+  DynamicGraph(RepType _r, bool _cs, bool _bs);
   ~DynamicGraph();
 
   RepType _rtype;
