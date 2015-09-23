@@ -225,11 +225,11 @@ void CmdLine::compute_original() {
   else if (graph_type == LINEAR)
     printf("Graph Type: Linear Search on Adjacency List\n");
   else if (graph_type == HYBRID)
-    printf("Graph Type: Hybrid: Trie + Hash\n");
+    printf("Graph Type: Hybrid: E/V AM lines + Hash 2\n");
   else if (graph_type == HASH2)
     printf("Graph Type: Hash Table of Adjacency List (2)\n");
   else if (graph_type == HYBRID2)
-    printf("Graph Type: Hybrid 2: Trie + Hash 2\n");
+    printf("Graph Type: Hybrid 2: sqrt(V) AM lines + Hash 2\n");
 
   if (cache_status == true)
     printf("Cache turned on\n");
