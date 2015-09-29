@@ -35,6 +35,7 @@ char CmdLine::output_file[MAX_BUF];
 char CmdLine::occ_file[MAX_BUF];
 
 bool CmdLine::dir;
+bool CmdLine::large_scale;
 bool CmdLine::occurrences;
 bool CmdLine::create;
 
@@ -178,7 +179,10 @@ void CmdLine::prepare_graph() {
     Error::msg("No valid graph format specified");
 
   // Read the graph file
-  g = new DynamicGraph();
+  if (large_scale)
+    g = new DynamicGraph();
+  else
+    g = new GraphMatrix();
 
   // Use simple or simple_weight text format
   if (format == SIMPLE)
@@ -207,6 +211,11 @@ void CmdLine::compute_original() {
     printf("Method:     GTRIE with file containing complete g-trie\n");
   else if (method == SUBGRAPHS)
     printf("Method:     GTRIE with subgraphs read from file\n");
+
+  if (large_scale)
+    printf("Representaion: Large Scale\n");
+  else
+    printf("Representaion: Adjacency Matrix\n");
 
   // Compute frequency
   Global::show_occ = occurrences;
@@ -563,6 +572,11 @@ void CmdLine::parse_cmdargs(int argc, char **argv) {
     // Directed Graph
     else if (!strcmp("-d",argv[i]) || !strcmp("--directed",argv[i])) {
       dir=true;
+    }
+
+    // Large Scale Graph
+    else if (!strcmp("-ls",argv[i]) || !strcmp("--largescale",argv[i])) {
+      large_scale=true;
     }
 
     // Undirected Graph

@@ -23,6 +23,7 @@ Last Update: 11/02/2012
 #include "Common.h"
 #include "Graph.h"
 #include "DynamicGraph.h"
+#include "GraphMatrix.h"
 
 #define BASE_FORMAT      95
 #define BASE_FIRST       ' '

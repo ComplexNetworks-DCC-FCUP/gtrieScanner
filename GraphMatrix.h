@@ -50,6 +50,7 @@ class GraphMatrix : public Graph {
   bool **adjacencyMatrix() {return _adjM;}
 
   void createGraph(int n, GraphType t);
+  void prepareGraph() {}
 
   GraphType type() {return _type;}
 

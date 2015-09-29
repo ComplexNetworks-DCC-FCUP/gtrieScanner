@@ -39,6 +39,7 @@ class CmdLine {
   static char occ_file[MAX_BUF];
 
   static bool dir;
+  static bool large_scale;
   static bool occurrences;
   static bool create;
 

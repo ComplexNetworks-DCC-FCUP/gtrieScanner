@@ -812,7 +812,7 @@ int GTrie::frequencyGraphString(int size, const char *s) {
   char larger[size*size+1];
   Isomorphism::canonicalBasedNauty(s, larger, size);
 
-  Graph *gr = new DynamicGraph();
+  Graph *gr = new GraphMatrix();
   GraphUtils::strToGraph(gr, larger, size, DIRECTED); // May change later
   int aux = _root->frequencyGraph(gr);
   delete gr;
@@ -826,7 +826,7 @@ void GTrie::insertGraphString(int size, const char *s) {
   Isomorphism::canonicalBigger(s, larger, size);
 
 
-  Graph *gr = new DynamicGraph();
+  Graph *gr = new GraphMatrix();
   GraphUtils::strToGraph(gr, larger, size, DIRECTED); // May change later
   list<iPair> *cond = new list<iPair>;
   Conditions::symmetryConditions(gr, cond);
@@ -862,7 +862,7 @@ void GTrie::insertGraphNautyString(int size, const char *s, bool dir, int label)
   else
     Isomorphism::canonicalBasedNauty(s, larger, size);
 
-  Graph *gr = new DynamicGraph();
+  Graph *gr = new GraphMatrix();
 
   if (dir)  GraphUtils::strToGraph(gr, larger, size, DIRECTED);
   else      GraphUtils::strToGraph(gr, larger, size, UNDIRECTED);
