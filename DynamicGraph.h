@@ -24,14 +24,9 @@ Last Update: 27/09/2014
 #include "Graph.h"
 #include <math.h>
 
-typedef enum{MATRIX, BSLIST, HASH, TRIE, INTER, LINEAR, HYBRID, HASH2, HYBRID2} RepType;
-
 class DynamicGraph : public Graph {
  private:
   GraphType _type;
-  bool _cstatus;
-  bool _bstatus;
-
   int _num_nodes;
   int _num_edges;
   int _sqrt_nodes;
@@ -40,12 +35,8 @@ class DynamicGraph : public Graph {
   int *_in;
   int *_out;
   int *_hash_out;
-  int *_minL;
-  int *_maxL;
   int *_num_neighbours;
-  int **cache;
   int *hybrid_ch;
-  int *bloom;
 
   bool **_adjM;
   int  **_array_neighbours;
@@ -56,12 +47,6 @@ class DynamicGraph : public Graph {
   struct l_list;
   l_list ***_hashM;
 
-  struct a_trie;
-  a_trie **trie;
-
-  a_trie* new_trie();
-  void delete_trie(a_trie* cur);
-
   void _removeVector(vector<int> &v, int b);
   
   void _init();
@@ -70,12 +55,8 @@ class DynamicGraph : public Graph {
 
  public:
   DynamicGraph();
-  DynamicGraph(RepType _r);
-  DynamicGraph(RepType _r, bool _cs);
-  DynamicGraph(RepType _r, bool _cs, bool _bs);
   ~DynamicGraph();
 
-  RepType _rtype;
   bool ready;
 
   void createGraph(int n, GraphType t);

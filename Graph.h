@@ -29,8 +29,6 @@ class Graph {
   virtual ~Graph() {};
 
   virtual void createGraph(int n, GraphType t) = 0; // create graph with n nodes
-                                                    // and type 't'
-
   virtual GraphType type() = 0;           // Graph Type
 
   virtual void zero() = 0;                // remove all connections

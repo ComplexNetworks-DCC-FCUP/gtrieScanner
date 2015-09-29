@@ -22,77 +22,12 @@ Last Update: 11/02/2012
 #include <stdio.h>
 #include <algorithm>
 
-#define TRIE_MOD 31
-#define TRIE_ORD 5
-
-#ifdef PRINT_CALLS
-FILE* fn;
-#endif
-
 struct DynamicGraph::l_list {
   int value;
   l_list* next;
 };
 
-struct DynamicGraph::a_trie {
-  bool end;
-  a_trie* childs[TRIE_MOD + 1];
-};
-
-DynamicGraph::a_trie* DynamicGraph::new_trie() {
-  a_trie* tmp = new a_trie();
-  int i;
-  
-  tmp->end = false;
-  for (i = 0; i <= TRIE_MOD; i++) {
-    tmp->childs[i] = NULL;
-  }
-
-  return tmp;
-}
-
-void DynamicGraph::delete_trie(a_trie* cur) {
-  if (cur == NULL)
-    return;
-
-  int i;
-  for (i = 0; i <= TRIE_MOD; i++) {
-    delete_trie(cur->childs[i]);
-    if (cur->childs[i] != NULL)
-      delete cur->childs[i];
-  }
-}
-
-DynamicGraph::DynamicGraph(RepType _r) {
-  #ifdef PRINT_CALLS
-  fn = fopen("hasEdgeCalls.txt", "w");
-  #endif
-
-  _cstatus = false;
-  _bstatus = false;
-  _rtype = _r;
-  _init();
-}
-
-DynamicGraph::DynamicGraph(RepType _r, bool _cs) {
-  #ifdef PRINT_CALLS
-  fn = fopen("hasEdgeCalls.txt", "w");
-  #endif
-
-  _cstatus = _cs;
-  _bstatus = false;
-  _rtype = _r;
-  _init();
-}
-
-DynamicGraph::DynamicGraph(RepType _r, bool _cs, bool _bs) {
-  #ifdef PRINT_CALLS
-  fn = fopen("hasEdgeCalls.txt", "w");
-  #endif
-
-  _cstatus = _cs;
-  _bstatus = _bs;
-  _rtype = _r;
+DynamicGraph::DynamicGraph() {
   _init();
 }
 
@@ -112,16 +47,11 @@ void DynamicGraph::_init() {
   _adjOut           = NULL;
   _adjIn            = NULL;
   _neighbours       = NULL;
-  bloom             = NULL;
-  cache             = NULL;
-  trie              = NULL;
   hybrid_ch         = NULL;
   _hashM            = NULL;
   _in               = NULL;
   _out              = NULL;
   _hash_out         = NULL;
-  _maxL             = NULL;
-  _minL             = NULL;
   _num_neighbours   = NULL;
   _array_neighbours = NULL;
 }
@@ -143,12 +73,14 @@ void DynamicGraph::_delete() {
   if (_hashM != NULL) {
     int j;
     for (i = 0; i < _num_nodes; i++) {
-      for (j = 0; j < _sqrt_nodes; j++) {
-        l_list* cur = _hashM[i][j], *prev;
-        while (cur != NULL) {
-          prev = cur;
-          cur = cur->next;
-          delete prev;
+      if (_hash_out != NULL) {
+        for (j = 0; j < _hash_out[i]; j++) {
+          l_list* cur = _hashM[i][j], *prev;
+          while (cur != NULL) {
+            prev = cur;
+            cur = cur->next;
+            delete prev;
+          }
         }
       }
 
@@ -157,28 +89,10 @@ void DynamicGraph::_delete() {
     delete[] _hashM;
   }
     
-  if (cache != NULL) {
-    for (i = 0; i < _num_nodes; i++)
-      delete[] cache[i];
-    delete[] cache;
-  }
-
-  if (bloom != NULL)
-    delete[] bloom;
-
   if (_in != NULL) delete[] _in;
   if (_out != NULL) delete[] _out;
   if (_hash_out != NULL) delete[] _hash_out;
   if (_num_neighbours != NULL) delete[] _num_neighbours;
-  if (_maxL != NULL) delete[] _maxL;
-  if (_minL != NULL) delete[] _minL;
-  if (trie != NULL) {
-    for (i = 0; i < _num_nodes; i++) {
-      delete_trie(trie[i]);
-      delete trie[i];
-    }
-    delete[] trie;
-  }
 
   if (hybrid_ch != NULL) delete[] hybrid_ch;
 
@@ -195,13 +109,11 @@ void DynamicGraph::_delete() {
 void DynamicGraph::_deleteAux() {
   int i;
 
-  if (_rtype == HYBRID || _rtype == HYBRID2) {
-    if (_adjM != NULL) {
-      for (i = 0; i < _num_nodes; i++)
-        if (_adjM[i] != NULL)
-          delete[] _adjM[i];
-      delete[] _adjM;
-    }
+  if (_adjM != NULL) {
+    for (i = 0; i < _num_nodes; i++)
+      if (_adjM[i] != NULL)
+        delete[] _adjM[i];
+    delete[] _adjM;
   }
 
   if (_hashM != NULL) {
@@ -217,34 +129,13 @@ void DynamicGraph::_deleteAux() {
           }
         }
       }
-      else {
-        for (j = 0; j < _sqrt_nodes; j++) {
-          l_list* cur = _hashM[i][j], *prev;
-          while (cur != NULL) {
-            prev = cur;
-            cur = cur->next;
-            delete prev;
-          }
-        }
-      }
-
+   
       delete[] _hashM[i];
     }
     delete[] _hashM;
   }
 
-  if (_maxL != NULL) delete[] _maxL;
-  if (_minL != NULL) delete[] _minL;
-  if (trie != NULL) {
-    for (i = 0; i < _num_nodes; i++) {
-      delete_trie(trie[i]);
-      delete trie[i];
-    }
-    delete[] trie;
-  }
-
   if (hybrid_ch != NULL) delete[] hybrid_ch;
-  if (bloom != NULL) delete[] bloom;
 
   ready = false;
 }
@@ -260,18 +151,9 @@ void DynamicGraph::zero() {
     _hash_out[i] = 0;
     _num_neighbours[i] = 0;
 
-    if (_bstatus)
-      bloom[i] = 0;
-
-    if (_cstatus)
-      for (j = 0; j <= _log_nodes; j++)
-        cache[i][j] = -1;
     _adjIn[i].clear();
     _adjOut[i].clear();
     _neighbours[i].clear();
-    if (_rtype == MATRIX)
-      for (j=0; j<_num_nodes;j++)
-        _adjM[i][j]=false;
   }
 }
 
@@ -287,32 +169,10 @@ void DynamicGraph::createGraph(int n, GraphType t) {
   while (_log_nodes < tmp_log)
     _log_nodes *= 2;
   _log_nodes--;
-
-/*  tmp_log = (int)sqrt(n) + 1;
-  _sqrt_nodes = 1;
-  while (_sqrt_nodes < tmp_log)
-    _sqrt_nodes *= 2;
-  _sqrt_nodes--;
-*/
-
-  if (_rtype == MATRIX) {
-    _adjM = new bool*[n];  
-    for (i = 0; i < n; i++)
-      _adjM[i] = new bool[n];
-  }
   
   _adjIn      = new vector<int>[n];
   _adjOut     = new vector<int>[n];
   _neighbours = new vector<int>[n];
-
-  if (_bstatus)
-    bloom = new int[n];
-
-  if (_cstatus) {
-    cache           = new int*[n];
-    for (i = 0; i < n; i++)
-      cache[i] = new int[_log_nodes + 1];
-  }
 
   _in             = new int[n];
   _out            = new int[n];
@@ -326,8 +186,6 @@ void DynamicGraph::prepareGraph() {
   _deleteAux();
   ready = true;
 
-  _maxL = new int[_num_nodes];
-  _minL = new int[_num_nodes];
   hybrid_ch = new int[_num_nodes];
 
   int i, j;
@@ -336,20 +194,8 @@ void DynamicGraph::prepareGraph() {
     sort(_adjOut[i].begin(), _adjOut[i].end());
     sort(_adjIn[i].begin(), _adjIn[i].end());
 
-    _maxL[i] = _minL[i] = -1;
     total += _out[i];
-
-    if (_out[i])
-    {
-      _maxL[i] = _adjOut[i][_out[i] - 1];
-      _minL[i] = _adjOut[i][0];
-    }
   }
-
-  if (_bstatus)
-    for (i = 0; i < _num_nodes; i++)
-      for (j = 0; j < _out[i]; j++)
-        bloom[i] |= _adjOut[i][j];
 
   int tmp_log = 2 * total / _num_nodes;
   _sqrt_nodes = 1;
@@ -357,133 +203,55 @@ void DynamicGraph::prepareGraph() {
     _sqrt_nodes *= 2;
   _sqrt_nodes--;
 
-  if (_rtype == HYBRID) {
-    _adjM = new bool*[_num_nodes];
+  _adjM = new bool*[_num_nodes];
 
-    vector<pair<int, int> > vs;
-    for (i = 0; i < _num_nodes; i++) {
-      hybrid_ch[i] = 1;
-      vs.push_back(pair<int, int>(_out[i], i));
-    }
-
-    sort(vs.begin(), vs.end());
-    reverse(vs.begin(), vs.end());
-
-    for (i = 0; i < min(5 * _sqrt_nodes / 2, _num_nodes); i++) {
-      int cur_node = vs[i].second;
-      hybrid_ch[cur_node] = 0;
-      _adjM[cur_node] = new bool[_num_nodes];
-      for (j = 0; j < _num_nodes; j++)
-        _adjM[cur_node][j] = false;
-
-      for (j = 0; j < _out[cur_node]; j++)
-        _adjM[cur_node][_adjOut[cur_node][j]] = true;
-    }
-  }
-  else if (_rtype == HYBRID2) {
-    _adjM = new bool*[_num_nodes];
-
-    vector<pair<int, int> > vs;
-    for (i = 0; i < _num_nodes; i++) {
-      hybrid_ch[i] = 1;
-      vs.push_back(pair<int, int>(_out[i], i));
-    }
-
-    sort(vs.begin(), vs.end());
-    reverse(vs.begin(), vs.end());
-
-    int mx_take = sqrt(_num_nodes) + 1;
-    for (i = 0; i < mx_take; i++) {
-      int cur_node = vs[i].second;
-      hybrid_ch[cur_node] = 0;
-      _adjM[cur_node] = new bool[_num_nodes];
-      for (j = 0; j < _num_nodes; j++)
-        _adjM[cur_node][j] = false;
-
-      for (j = 0; j < _out[cur_node]; j++)
-        _adjM[cur_node][_adjOut[cur_node][j]] = true;
-    }
-  }
-  
-  if (_rtype == MATRIX || _rtype == LINEAR)
-    return;
-
-  if (_rtype == BSLIST || _rtype == INTER)
-    return;
-
-  if (_rtype == HASH) {
-    _hashM = new l_list**[_num_nodes];
-
-    int i, j;
-    for (i = 0; i < _num_nodes; i++) {
-      _hashM[i] = new l_list*[_sqrt_nodes + 1];
-
-      for (j = 0; j <= _sqrt_nodes; j++)
-        _hashM[i][j] = NULL;
-    }
-
-    for (i = 0; i < _num_nodes; i++) {
-      for (j = 0; j < _out[i]; j++) {
-        l_list* n_node = new l_list();
-        n_node->value = _adjOut[i][j];
-        n_node->next = _hashM[i][_adjOut[i][j] & _sqrt_nodes];
-        _hashM[i][_adjOut[i][j] & _sqrt_nodes] = n_node;
-      }
-    }
+  vector<pair<int, int> > vs;
+  for (i = 0; i < _num_nodes; i++) {
+    hybrid_ch[i] = 1;
+    vs.push_back(pair<int, int>(_out[i], i));
   }
 
-  if (_rtype == HASH2 || _rtype == HYBRID2 || _rtype == HYBRID) {
-    _hashM = new l_list**[_num_nodes];
+  sort(vs.begin(), vs.end());
+  reverse(vs.begin(), vs.end());
 
-    int i, j;
-    for (i = 0; i < _num_nodes; i++) {
-      if ((_rtype == HYBRID || _rtype == HYBRID2) && !hybrid_ch[i])
-        continue;
+  for (i = 0; i < min(5 * _sqrt_nodes / 2, _num_nodes); i++) {
+    int cur_node = vs[i].second;
+    hybrid_ch[cur_node] = 0;
+    _adjM[cur_node] = new bool[_num_nodes];
+    for (j = 0; j < _num_nodes; j++)
+      _adjM[cur_node][j] = false;
 
-      int tmp_log = 5 * _out[i] / 2;
-      _hash_out[i] = 1;
-      while (_hash_out[i] < tmp_log)
-        _hash_out[i] *= 2;
-      _hash_out[i]--;
-
-      _hashM[i] = new l_list*[_hash_out[i] + 1];
-
-      for (j = 0; j <= _hash_out[i]; j++)
-        _hashM[i][j] = NULL;
-    }
-
-    for (i = 0; i < _num_nodes; i++) {
-      if ((_rtype == HYBRID || _rtype == HYBRID2) && !hybrid_ch[i])
-        continue;
-
-      for (j = 0; j < _out[i]; j++) {
-        l_list* n_node = new l_list();
-        n_node->value = _adjOut[i][j];
-        n_node->next = _hashM[i][_adjOut[i][j] & _hash_out[i]];
-        _hashM[i][_adjOut[i][j] & _hash_out[i]] = n_node;
-      }
-    }
+    for (j = 0; j < _out[cur_node]; j++)
+      _adjM[cur_node][_adjOut[cur_node][j]] = true;
   }
 
-  if (_rtype == TRIE) {
-    int i, j;
-    trie = new a_trie*[_num_nodes];
-    
-    for (i = 0; i < _num_nodes; i++) {
-      trie[i] = new_trie();
+  _hashM = new l_list**[_num_nodes];
 
-      for (j = 0; j < _out[i]; j++) {
-        int num = _adjOut[i][j];
-        a_trie* cur = trie[i];
-        
-        while (num) {
-          if (cur->childs[num & TRIE_MOD] == NULL)
-            cur->childs[num & TRIE_MOD] = new_trie();
-          cur = cur->childs[num & TRIE_MOD];
-          num >>= TRIE_ORD;
-        }
-        cur->end = true;
-      }
+  for (i = 0; i < _num_nodes; i++) {
+    if (!hybrid_ch[i])
+      continue;
+
+    int tmp_log = 5 * _out[i] / 2;
+    _hash_out[i] = 1;
+    while (_hash_out[i] < tmp_log)
+      _hash_out[i] *= 2;
+    _hash_out[i]--;
+
+    _hashM[i] = new l_list*[_hash_out[i] + 1];
+
+    for (j = 0; j <= _hash_out[i]; j++)
+      _hashM[i][j] = NULL;
+  }
+
+  for (i = 0; i < _num_nodes; i++) {
+    if (!hybrid_ch[i])
+      continue;
+
+    for (j = 0; j < _out[i]; j++) {
+      l_list* n_node = new l_list();
+      n_node->value = _adjOut[i][j];
+      n_node->next = _hashM[i][_adjOut[i][j] & _hash_out[i]];
+      _hashM[i][_adjOut[i][j] & _hash_out[i]] = n_node;
     }
   }
 }
@@ -497,9 +265,6 @@ void DynamicGraph::addEdge(int a, int b) {
 
   _num_edges++;
 
-  if (_rtype == MATRIX)
-    _adjM[a][b] = true;
-
   if (!hasEdge(b, a)) {
     _neighbours[b].push_back(a);
     _num_neighbours[b]++;
@@ -510,13 +275,9 @@ void DynamicGraph::addEdge(int a, int b) {
 }
 
 void DynamicGraph::rmEdge(int a, int b) {
-//  fprintf(stderr, "rmEdge is deprecated for the time being\n");
   ready = false;
 
   if (!hasEdge(a, b)) return;
-
-  if (_rtype == MATRIX)
-    _adjM[a][b] = false;
 
   _removeVector(_adjOut[a], b);
   _out[a]--;
@@ -535,10 +296,6 @@ void DynamicGraph::rmEdge(int a, int b) {
 }
 
 bool DynamicGraph::hasEdge(int a, int b) {
-  #ifdef PRINT_CALLS
-  fprintf(fn, "%d %d\n", a, b);
-  #endif
-
   if (!ready) {
     int i;
     for (i = 0; i < _out[a]; i++)
@@ -547,18 +304,9 @@ bool DynamicGraph::hasEdge(int a, int b) {
     return false;
   }
 
-  if (_cstatus && cache[a][b & _log_nodes] == b)
-    return true;
-
-//  if (_bstatus && (~bloom[a] & b))
-//    return false;
-
-/*  if (b < _minL[a] || b > _maxL[a])
-      return false; */
-
-  if (_rtype == MATRIX || ((_rtype == HYBRID || _rtype == HYBRID2) && !hybrid_ch[a]))
+  if (!hybrid_ch[a])
     return _adjM[a][b];
-  else if (_rtype == LINEAR || ((_rtype == HYBRID || _rtype == HYBRID2) && _out[a] < 3)) {
+  else if (_out[a] < 3) {
     int i;
     for (i = 0; i < _out[a]; i++)
       if (_adjOut[a][i] == b)
@@ -566,88 +314,14 @@ bool DynamicGraph::hasEdge(int a, int b) {
 
     return false;
   }
-  else if (_rtype == BSLIST) {
-    int lo = 0, hi = _out[a] - 1, med, vl;
-    if (hi < 0)
-      return false;
-    
-    while (lo <= hi) {
-      med = (lo + hi) >> 1;
-      vl = _adjOut[a][med];
-      
-      if (vl < b)
-        lo = med + 1;
-      else if (vl > b)
-        hi = med - 1;
-      else if (vl == b)
-        return true;
-    }
-
-    return false;
-  }
-//  else if (_rtype == HASH || (_rtype == HYBRID && _out[a] <= HYBRID_NUMBER)) {
-  else if (_rtype == HASH) {
-    l_list* cur = _hashM[a][b & _sqrt_nodes];
-    while (cur != NULL) {
-      if (cur->value == b) {
-        if (_cstatus)
-          cache[a][b & _log_nodes] = b;
-        return true;
-      }
-
-      cur = cur->next;
-    }
-    return false;
-  }
-  else if (_rtype == HASH2 || ((_rtype == HYBRID2 || _rtype == HYBRID) && hybrid_ch[a])) {
+  else {
     l_list* cur = _hashM[a][b & _hash_out[a]];
     while (cur != NULL) {
-      if (cur->value == b) {
-        if (_cstatus)
-          cache[a][b & _log_nodes] = b;
+      if (cur->value == b)
         return true;
-      }
 
       cur = cur->next;
     }
-    return false;
-  }
-  else if (_rtype == TRIE) {
-    a_trie* cur = trie[a];
-
-    while (cur != NULL && b) {
-      cur = cur->childs[b & TRIE_MOD];
-      b >>= TRIE_ORD;
-    }
-
-    /*if (_cstatus) {
-      if (cur != NULL && cur->end) {
-        cache[a][b & _log_nodes] = b;
-        return true;
-      }
-
-      return false;
-    }*/
-
-    return cur != NULL && cur->end;
-  }
-  else if (_rtype == INTER) {
-    int lo = 0, hi = _out[a] - 1, med, vl;
-    if (hi < 0 || b < _adjOut[a][0] || b > _adjOut[a][hi])
-      return false;
-    
-    while (_adjOut[a][lo] <= b && _adjOut[a][hi] >= b) {
-      med = (lo == hi) ? lo : lo + ((b - _adjOut[a][lo]) * (hi - lo)) / (_adjOut[a][hi] - _adjOut[a][lo]);
-      vl = _adjOut[a][med];
-      
-      if (vl < b)
-        lo = med + 1;
-      else if (vl > b)
-        hi = med - 1;
-      else if (vl == b)
-        return true;
-    }
-
     return false;
   }
 

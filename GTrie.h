@@ -110,11 +110,9 @@ class GTrieNode {
 class GTrie {
  private:
   GTrieNode *_root;
-  RepType rtype;
 
  public:
   GTrie();
-  GTrie(RepType _r);
   ~GTrie();
 
   void insertGraph(Graph *g);

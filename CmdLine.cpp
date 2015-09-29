@@ -50,9 +50,6 @@ double CmdLine::time_random;
 MethodType CmdLine::method;
 FormatType CmdLine::format;
 OutputType CmdLine::output;
-RepType CmdLine::graph_type;
-bool CmdLine::cache_status;
-bool CmdLine::bloom_status;
 Graph *CmdLine::g;
 
 FILE *CmdLine::f_output;
@@ -181,7 +178,7 @@ void CmdLine::prepare_graph() {
     Error::msg("No valid graph format specified");
 
   // Read the graph file
-  g = new DynamicGraph(graph_type, cache_status, bloom_status);
+  g = new DynamicGraph();
 
   // Use simple or simple_weight text format
   if (format == SIMPLE)
@@ -210,35 +207,6 @@ void CmdLine::compute_original() {
     printf("Method:     GTRIE with file containing complete g-trie\n");
   else if (method == SUBGRAPHS)
     printf("Method:     GTRIE with subgraphs read from file\n");
-
-  // Print representation description
-  if (graph_type == MATRIX)
-    printf("Graph Type: Adjacency Matrix\n");
-  else if (graph_type == BSLIST)
-    printf("Graph Type: Adjacency List + Binary Search\n");
-  else if (graph_type == HASH)
-    printf("Graph Type: Hash Table of Adjacency Matrix\n");
-  else if (graph_type == TRIE)
-    printf("Graph Type: Trie of Digits\n");
-  else if (graph_type == INTER)
-    printf("Graph Type: Adjacency List + Interpolation Search\n");
-  else if (graph_type == LINEAR)
-    printf("Graph Type: Linear Search on Adjacency List\n");
-  else if (graph_type == HYBRID)
-    printf("Graph Type: Hybrid: E/V AM lines + Hash 2\n");
-  else if (graph_type == HASH2)
-    printf("Graph Type: Hash Table of Adjacency List (2)\n");
-  else if (graph_type == HYBRID2)
-    printf("Graph Type: Hybrid 2: sqrt(V) AM lines + Hash 2\n");
-
-  if (cache_status == true)
-    printf("Cache turned on\n");
-  if (cache_status == true && graph_type != HASH && graph_type != HASH2 && graph_type != TRIE && graph_type != HYBRID && graph_type != HYBRID2)
-    printf("Warning: Cache only works with hash, trie or hybrid methods\n");
-
-  if (bloom_status == true)
-    printf("Bloom filter turned on\n");
-
 
   // Compute frequency
   Global::show_occ = occurrences;
@@ -516,9 +484,6 @@ void CmdLine::defaults() {
   create = false;
   format = SIMPLE_WEIGHT;
   output = TEXT;
-  graph_type = MATRIX;
-  cache_status = false;
-  bloom_status = false;
   occurrences = false;
 }
 
@@ -623,50 +588,6 @@ void CmdLine::parse_cmdargs(int argc, char **argv) {
     // Number of tries per node
     else if (!strcmp("-rt",argv[i]) || !strcmp("--rtries",argv[i])) {
       random_tries = atoi(argv[++i]);
-    }
-
-    // Use cache on graph representation
-    else if (!strcmp("-ch",argv[i]) || !strcmp("--cache", argv[i])) {
-      cache_status = true;
-    }
-
-    // Use bloom filter on graph representation
-    else if (!strcmp("-bm",argv[i]) || !strcmp("--bloom", argv[i])) {
-      bloom_status = true;
-    }
-
-    // Type of graph representation
-    else if (!strcmp("-tp",argv[i]) || !strcmp("--graphtype",argv[i])) {
-      int vl = atoi(argv[++i]);
-      switch (vl) {
-        case 1:
-          graph_type = BSLIST;
-          break;
-        case 2:
-          graph_type = HASH;
-          break;
-        case 3:
-          graph_type = TRIE;
-          break;
-        case 4:
-          graph_type = INTER;
-          break;
-        case 5:
-          graph_type = LINEAR;
-          break;
-        case 6:
-          graph_type = HYBRID;
-          break;
-        case 7:
-          graph_type = HASH2;
-          break;
-        case 8:
-          graph_type = HYBRID2;
-          break;
-        default:
-          graph_type = MATRIX;
-          break;
-      }
     }
   }
 
